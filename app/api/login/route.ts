@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE, authToken } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { AUTH_COOKIE, criarSessao } from "@/lib/auth";
+import { verificaSenha } from "@/lib/usuario";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
-  if (!body || body.senha !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: "senha incorreta" }, { status: 401 });
+  const email = (body?.email ?? "").trim().toLowerCase();
+  const senha = body?.senha ?? "";
+  if (!email || !senha) {
+    return NextResponse.json({ error: "informe email e senha" }, { status: 400 });
   }
+
+  const usuario = await prisma.usuario.findUnique({ where: { email } });
+  if (!usuario || !verificaSenha(senha, usuario.senhaHash)) {
+    return NextResponse.json({ error: "e-mail ou senha incorretos" }, { status: 401 });
+  }
+
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(AUTH_COOKIE, authToken(), {
+  res.cookies.set(AUTH_COOKIE, criarSessao(usuario.id), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",

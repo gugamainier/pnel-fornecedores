@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FlownixLogo from "@/components/FlownixLogo";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState(false);
   const [sending, setSending] = useState(false);
@@ -16,7 +18,7 @@ export default function LoginPage() {
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senha }),
+      body: JSON.stringify({ email, senha }),
     });
     if (res.ok) {
       router.push("/");
@@ -27,40 +29,73 @@ export default function LoginPage() {
     }
   }
 
+  const inputCls =
+    "mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
+
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-ink px-4">
+      {/* marca d'água grande ao fundo */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-[-2rem] flex justify-center opacity-[0.04]"
+      >
+        <FlownixLogo className="text-[22vw] leading-none" />
+      </div>
+
+      <FlownixLogo className="mb-8 text-5xl" />
+
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+        className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
       >
-        <p className="text-sm font-semibold uppercase tracking-widest text-brand-600">
-          PNEL
-        </p>
-        <h1 className="mt-1 text-xl font-bold text-slate-900">
-          Base de Fornecedores
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Acesso restrito à equipe de produção.
-        </p>
-        <input
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          placeholder="Senha de acesso"
-          autoFocus
-          className="mt-5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-        />
+        <label className="block text-sm font-medium text-slate-700">
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="voce@pnel.com.br"
+            autoFocus
+            autoComplete="email"
+            className={inputCls}
+          />
+        </label>
+
+        <label className="mt-4 block text-sm font-medium text-slate-700">
+          Senha
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            className={inputCls}
+          />
+        </label>
+
         {erro && (
-          <p className="mt-2 text-sm text-red-600">Senha incorreta.</p>
+          <p className="mt-3 text-sm text-fxred-600">E-mail ou senha incorretos.</p>
         )}
+
         <button
           type="submit"
-          disabled={sending || !senha}
-          className="mt-4 w-full rounded-lg bg-brand-600 px-4 py-2 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+          disabled={sending || !email || !senha}
+          className="mt-5 w-full rounded-md bg-brand-600 px-4 py-2 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
         >
-          Entrar
+          {sending ? "Entrando…" : "Login"}
         </button>
+
+        <a
+          href="mailto:gustavo@pnel.com.br?subject=Acesso%20-%20Base%20de%20Fornecedores"
+          className="mt-3 block text-center text-xs text-slate-500 transition hover:text-slate-700"
+        >
+          Esqueceu a senha?
+        </a>
       </form>
+
+      <p className="mt-8 text-center text-xs text-slate-500">
+        © {new Date().getFullYear()} PNEL | Todos os direitos reservados.
+      </p>
     </main>
   );
 }

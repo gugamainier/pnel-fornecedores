@@ -9,6 +9,15 @@ datasource db {
 
 // Índices para busca/filtro rápidos com ~15k linhas em produção.
 
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  nome      String
+  senhaHash String
+  papel     String   @default("produtor") // admin | produtor
+  criadoEm  DateTime @default(now())
+}
+
 model Fornecedor {
   id                 Int       @id @default(autoincrement())
   token              String    @unique
