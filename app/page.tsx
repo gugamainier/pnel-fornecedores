@@ -1,9 +1,11 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { usuarioAtual } from "@/lib/auth";
 import { UFS } from "@/lib/categorias";
 import AdminNav from "@/components/AdminNav";
 import CopyRsvpButton from "@/components/CopyRsvpButton";
 import ConvidarFornecedor from "@/components/ConvidarFornecedor";
+import RemoverFornecedorCard from "@/components/RemoverFornecedorCard";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,9 @@ export default async function ConsultaPage({
 }: {
   searchParams: Promise<{ q?: string; cat?: string; uf?: string; status?: string }>;
 }) {
-  await requireAuth();
+  const usuario = await usuarioAtual();
+  if (!usuario) redirect("/login");
+  const isAdmin = usuario.papel === "admin";
   const { q = "", cat = "", uf = "", status = "" } = await searchParams;
 
   const todos = await prisma.fornecedor.findMany({ orderBy: { nome: "asc" } });
@@ -163,6 +167,7 @@ export default async function ConsultaPage({
                     >
                       Editar
                     </a>
+                    {isAdmin && <RemoverFornecedorCard id={f.id} nome={f.nome} />}
                   </div>
                 </li>
               );

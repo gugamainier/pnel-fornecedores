@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, usuarioAtual } from "@/lib/auth";
 import { sanitizaBody } from "@/lib/fornecedor";
 
 export async function PATCH(
@@ -41,8 +41,9 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "não autorizado" }, { status: 401 });
+  const u = await usuarioAtual();
+  if (!u || u.papel !== "admin") {
+    return NextResponse.json({ error: "apenas admin pode remover" }, { status: 403 });
   }
   const { id } = await params;
   await prisma.fornecedor.delete({ where: { id: Number(id) } });
