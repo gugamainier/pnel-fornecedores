@@ -129,7 +129,7 @@ export default function DisparoLista() {
           value={template}
           onChange={(e) => setTemplate(e.target.value)}
           rows={8}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs text-slate-800 focus:border-brand-500 focus:outline-none"
         />
       </div>
 
@@ -139,7 +139,7 @@ export default function DisparoLista() {
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Filtrar por nome…"
-          className="min-w-48 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="min-w-48 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
         />
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
@@ -174,7 +174,7 @@ export default function DisparoLista() {
             )}
             <button
               onClick={() => abrirWhatsApp(f)}
-              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+              className="rounded-lg bg-fxgreen-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-fxgreen-700"
             >
               {f.rsvpEnviadoEm ? "Reenviar" : "Enviar WhatsApp"}
             </button>

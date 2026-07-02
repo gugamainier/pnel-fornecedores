@@ -16,7 +16,7 @@ export default async function ConfirmarPage({
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
       <header className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-widest text-indigo-600">
+        <p className="text-sm font-semibold uppercase tracking-widest text-brand-600">
           PNEL · Agência de Soluções
         </p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">

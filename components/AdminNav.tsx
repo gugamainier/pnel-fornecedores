@@ -22,7 +22,7 @@ export default function AdminNav() {
   return (
     <nav className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
-        <span className="text-sm font-bold uppercase tracking-widest text-indigo-600">
+        <span className="text-sm font-bold uppercase tracking-widest text-brand-600">
           PNEL · Fornecedores
         </span>
         <div className="flex flex-1 flex-wrap gap-1">
@@ -32,7 +32,7 @@ export default function AdminNav() {
               href={l.href}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                 pathname === l.href
-                  ? "bg-indigo-50 text-indigo-700"
+                  ? "bg-brand-50 text-brand-700"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >

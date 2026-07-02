@@ -11,7 +11,7 @@ function semAcento(s: string): string {
 }
 
 const statusBadge: Record<string, { label: string; cls: string }> = {
-  confirmado: { label: "Confirmado", cls: "bg-emerald-100 text-emerald-700" },
+  confirmado: { label: "Confirmado", cls: "bg-fxgreen-100 text-fxgreen-700" },
   pendente: { label: "Pendente", cls: "bg-amber-100 text-amber-700" },
 };
 
@@ -46,7 +46,7 @@ export default async function ConsultaPage({
   const filtrando = Boolean(q || cat || uf || status);
 
   const selectCls =
-    "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none";
+    "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none";
 
   return (
     <>
@@ -68,7 +68,7 @@ export default async function ConsultaPage({
             name="q"
             defaultValue={q}
             placeholder="Buscar por nome, serviço, cidade…"
-            className="min-w-56 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="min-w-56 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
           <select name="cat" defaultValue={cat} className={selectCls}>
             <option value="">Todas as categorias</option>
@@ -90,7 +90,7 @@ export default async function ConsultaPage({
           </select>
           <button
             type="submit"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
           >
             Filtrar
           </button>
@@ -137,7 +137,7 @@ export default async function ConsultaPage({
                         href={`https://wa.me/55${f.telefoneDigits}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                        className="rounded-lg bg-fxgreen-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-fxgreen-700"
                       >
                         WhatsApp
                       </a>
@@ -149,7 +149,7 @@ export default async function ConsultaPage({
                         )}&body=${encodeURIComponent(
                           `Olá${f.contato ? `, ${f.contato}` : ""}!\n\nSomos da PNEL, agência de soluções em Live Marketing. Gostaríamos de solicitar uma cotação:\n\n• Evento/projeto: \n• Data e local: \n• Escopo: \n• Prazo para retorno: \n\nObrigado!`
                         )}`}
-                        className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700"
+                        className="rounded-lg bg-fxpurple-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-fxpurple-700"
                       >
                         COTAR
                       </a>

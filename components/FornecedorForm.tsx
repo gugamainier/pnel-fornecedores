@@ -26,7 +26,7 @@ export type FornecedorFormData = {
 };
 
 const inputCls =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
 const labelCls = "block text-sm font-medium text-slate-700 mb-1";
 
 function Field({
@@ -199,7 +199,7 @@ export default function FornecedorForm({
       <button
         type="submit"
         disabled={sending}
-        className="w-full rounded-xl bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60 sm:w-auto"
+        className="w-full rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60 sm:w-auto"
       >
         {sending ? "Enviando…" : submitLabel}
       </button>

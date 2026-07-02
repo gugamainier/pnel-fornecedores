@@ -1,19 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f7f8fa;
+  --foreground: #151515;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+
+  /* FLOWNIX — azul (cor primária, mais usada) */
+  --color-brand-50: #eef3ff;
+  --color-brand-200: #bcd0ff;
+  --color-brand-500: #2f6bff;
+  --color-brand-600: #2f6bff;
+  --color-brand-700: #1e50d6;
+
+  /* FLOWNIX — verde (usado nos botões de WhatsApp) */
+  --color-fxgreen-100: #e2f4e0;
+  --color-fxgreen-600: #3fae3b;
+  --color-fxgreen-700: #338f30;
+
+  /* FLOWNIX — roxo (usado no botão COTAR) */
+  --color-fxpurple-600: #8b2fc9;
+  --color-fxpurple-700: #7325a8;
+
+  /* FLOWNIX — vermelho (acento pontual) */
+  --color-fxred-600: #e64a38;
+
+  /* FLOWNIX — preto de apoio */
+  --color-ink: #151515;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), "Nunito Sans", Arial, Helvetica, sans-serif;
+}
+
+/* Títulos em Inter (FLOWNIX: "Títulos — Inter bold") */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading), Inter, sans-serif;
 }
