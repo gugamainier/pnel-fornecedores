@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import PnelLogo from "@/components/PnelLogo";
 
 const links = [
   { href: "/", label: "Consulta" },
@@ -23,9 +24,10 @@ export default function AdminNav() {
   return (
     <nav className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
-        <span className="text-sm font-bold uppercase tracking-widest text-brand-600">
-          PNEL · Fornecedores
-        </span>
+        <Link href="/" className="flex items-center gap-2">
+          <PnelLogo variant="dark" className="h-7 w-auto" />
+          <span className="text-sm font-semibold text-slate-400">Fornecedores</span>
+        </Link>
         <div className="flex flex-1 flex-wrap gap-1">
           {links.map((l) => (
             <Link

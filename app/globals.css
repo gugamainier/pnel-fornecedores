@@ -2,7 +2,7 @@
 
 :root {
   --background: #f7f8fa;
-  --foreground: #151515;
+  --foreground: #212121;
 }
 
 @theme inline {
@@ -11,27 +11,27 @@
   --font-sans: var(--font-body);
   --font-heading: var(--font-heading);
 
-  /* FLOWNIX — azul (cor primária, mais usada) */
-  --color-brand-50: #eef3ff;
-  --color-brand-200: #bcd0ff;
-  --color-brand-500: #2f6bff;
-  --color-brand-600: #2f6bff;
-  --color-brand-700: #1e50d6;
+  /* PNEL — azul (cor primária, mais usada) */
+  --color-brand-50: #e6f4ff;
+  --color-brand-200: #99d1ff;
+  --color-brand-500: #0087ff;
+  --color-brand-600: #0087ff;
+  --color-brand-700: #006acc;
 
-  /* FLOWNIX — verde (usado nos botões de WhatsApp) */
-  --color-fxgreen-100: #e2f4e0;
-  --color-fxgreen-600: #3fae3b;
-  --color-fxgreen-700: #338f30;
+  /* PNEL — verde (usado nos botões de WhatsApp) */
+  --color-fxgreen-100: #e2f5e3;
+  --color-fxgreen-600: #42b649;
+  --color-fxgreen-700: #35933b;
 
-  /* FLOWNIX — roxo (usado no botão COTAR) */
-  --color-fxpurple-600: #8b2fc9;
-  --color-fxpurple-700: #7325a8;
+  /* PNEL — roxo (usado no botão COTAR) */
+  --color-fxpurple-600: #9033c1;
+  --color-fxpurple-700: #74299c;
 
-  /* FLOWNIX — vermelho (acento pontual) */
-  --color-fxred-600: #e64a38;
+  /* PNEL — vermelho (acento pontual) */
+  --color-fxred-600: #ed2945;
 
-  /* FLOWNIX — preto de apoio */
-  --color-ink: #151515;
+  /* PNEL — preto de apoio */
+  --color-ink: #212121;
 }
 
 body {
@@ -40,7 +40,7 @@ body {
   font-family: var(--font-body), "Nunito Sans", Arial, Helvetica, sans-serif;
 }
 
-/* Títulos em Inter (FLOWNIX: "Títulos — Inter bold") */
+/* Títulos em Inter, texto em Nunito Sans */
 h1, h2, h3, h4 {
   font-family: var(--font-heading), Inter, sans-serif;
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import FlownixLogo from "@/components/FlownixLogo";
+import PnelLogo from "@/components/PnelLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,12 +37,12 @@ export default function LoginPage() {
       {/* marca d'água grande ao fundo */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-[-2rem] flex justify-center opacity-[0.04]"
+        className="pointer-events-none absolute inset-x-0 bottom-[-4rem] flex justify-center opacity-[0.05]"
       >
-        <FlownixLogo className="text-[22vw] leading-none" />
+        <PnelLogo variant="light" className="w-[70vw]" />
       </div>
 
-      <FlownixLogo className="mb-8 text-5xl" />
+      <PnelLogo variant="light" className="mb-8 h-24 w-auto" />
 
       <form
         onSubmit={onSubmit}
