@@ -1,8 +1,16 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 export const AUTH_COOKIE = "pnel_auth";
+
+export type UsuarioSessao = {
+  id: number;
+  email: string;
+  nome: string;
+  papel: string;
+};
 
 const SECRET =
   process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || "pnel-dev-secret";
@@ -38,7 +46,25 @@ export async function isAuthenticated(): Promise<boolean> {
   return (await usuarioAtualId()) !== null;
 }
 
+/** Retorna o usuário logado (do banco), ou null. */
+export async function usuarioAtual(): Promise<UsuarioSessao | null> {
+  const id = await usuarioAtualId();
+  if (!id) return null;
+  return prisma.usuario.findUnique({
+    where: { id },
+    select: { id: true, email: true, nome: true, papel: true },
+  });
+}
+
 /** Para páginas protegidas: redireciona para /login se não autenticado. */
 export async function requireAuth(): Promise<void> {
   if (!(await isAuthenticated())) redirect("/login");
+}
+
+/** Para páginas de admin: redireciona não-admin para a consulta. Retorna o admin. */
+export async function requireAdmin(): Promise<UsuarioSessao> {
+  const u = await usuarioAtual();
+  if (!u) redirect("/login");
+  if (u.papel !== "admin") redirect("/");
+  return u;
 }

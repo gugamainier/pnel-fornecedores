@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { UFS } from "@/lib/categorias";
 import AdminNav from "@/components/AdminNav";
 import CopyRsvpButton from "@/components/CopyRsvpButton";
+import ConvidarFornecedor from "@/components/ConvidarFornecedor";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,7 @@ export default async function ConsultaPage({
               {todos.filter((f) => f.status === "confirmado").length} confirmados
             </p>
           </div>
+          <ConvidarFornecedor />
         </div>
 
         <form method="GET" className="mb-6 flex flex-wrap gap-2">
