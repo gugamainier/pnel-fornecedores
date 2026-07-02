@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIAS, UFS } from "@/lib/categorias";
+import DocumentoField from "@/components/DocumentoField";
 
 export type FornecedorFormData = {
   nome?: string | null;
@@ -71,6 +72,7 @@ export default function FornecedorForm({
   redirectTo = "/obrigado",
   admin = false,
   status,
+  empresaObrigatoria = false,
 }: {
   initial?: FornecedorFormData;
   endpoint: string;
@@ -79,6 +81,7 @@ export default function FornecedorForm({
   redirectTo?: string;
   admin?: boolean;
   status?: string | null;
+  empresaObrigatoria?: boolean;
 }) {
   const router = useRouter();
   const [sending, setSending] = useState(false);
@@ -114,24 +117,26 @@ export default function FornecedorForm({
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome (Nome Fantasia)" name="nome" required defaultValue={initial.nome} />
-          <Field label="Razão Social" name="razaoSocial" defaultValue={initial.razaoSocial} />
-          <Field label="CNPJ" name="cnpj" defaultValue={initial.cnpj} placeholder="00.000.000/0000-00" />
+          <Field label="Razão Social" name="razaoSocial" required={empresaObrigatoria} defaultValue={initial.razaoSocial} />
+          <DocumentoField defaultValue={initial.cnpj} required={empresaObrigatoria} />
           <Field label="Inscrição Municipal" name="inscricaoMunicipal" defaultValue={initial.inscricaoMunicipal} />
           <div className="sm:col-span-2">
-            <Field label="Endereço (com número e complemento)" name="endereco" defaultValue={initial.endereco} />
+            <Field label="Endereço (com número e complemento)" name="endereco" required={empresaObrigatoria} defaultValue={initial.endereco} />
           </div>
-          <Field label="Bairro" name="bairro" defaultValue={initial.bairro} />
-          <Field label="Cidade" name="cidade" defaultValue={initial.cidade} />
+          <Field label="Bairro" name="bairro" required={empresaObrigatoria} defaultValue={initial.bairro} />
+          <Field label="Cidade" name="cidade" required={empresaObrigatoria} defaultValue={initial.cidade} />
           <div>
-            <label className={labelCls} htmlFor="uf">Estado</label>
-            <select id="uf" name="uf" defaultValue={initial.uf ?? ""} className={inputCls}>
+            <label className={labelCls} htmlFor="uf">
+              Estado{empresaObrigatoria && <span className="text-red-500"> *</span>}
+            </label>
+            <select id="uf" name="uf" required={empresaObrigatoria} defaultValue={initial.uf ?? ""} className={inputCls}>
               <option value="">Selecione…</option>
               {UFS.map((uf) => (
                 <option key={uf} value={uf}>{uf}</option>
               ))}
             </select>
           </div>
-          <Field label="CEP" name="cep" defaultValue={initial.cep} placeholder="00000-000" />
+          <Field label="CEP" name="cep" required={empresaObrigatoria} defaultValue={initial.cep} placeholder="00000-000" />
         </div>
       </section>
 

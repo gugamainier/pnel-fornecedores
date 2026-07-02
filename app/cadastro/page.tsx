@@ -26,7 +26,7 @@ export default function CadastroPage() {
           orçamentos.
         </p>
       </header>
-      <FornecedorForm endpoint="/api/cadastro" submitLabel="Enviar cadastro" />
+      <FornecedorForm endpoint="/api/cadastro" submitLabel="Enviar cadastro" empresaObrigatoria />
     </main>
   );
 }

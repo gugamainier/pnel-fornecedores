@@ -36,6 +36,7 @@ export default async function ConfirmarPage({
         initial={fornecedor}
         endpoint={`/api/confirmar/${fornecedor.token}`}
         submitLabel="Confirmar cadastro"
+        empresaObrigatoria
       />
     </main>
   );
