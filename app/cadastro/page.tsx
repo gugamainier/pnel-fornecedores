@@ -1,4 +1,5 @@
 import FornecedorForm from "@/components/FornecedorForm";
+import PnelLogo from "@/components/PnelLogo";
 
 export const metadata = { title: "Cadastro de Fornecedores · PNEL" };
 
@@ -6,10 +7,11 @@ export default function CadastroPage() {
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
       <header className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-widest text-brand-600">
-          PNEL · Agência de Soluções
+        <PnelLogo variant="dark" className="h-10 w-auto" />
+        <p className="mt-2 text-xs font-medium uppercase tracking-widest text-slate-400">
+          Agência de Soluções
         </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">
+        <h1 className="mt-3 text-3xl font-bold text-slate-900">
           Cadastro de Fornecedores
         </h1>
         <p className="mt-3 text-slate-600">
