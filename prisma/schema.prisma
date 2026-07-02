@@ -18,6 +18,36 @@ model Usuario {
   criadoEm  DateTime @default(now())
 }
 
+model Local {
+  id             Int       @id @default(autoincrement())
+  token          String    @unique
+  nome           String
+  tipo           String? // Espaço, Restaurante, Auditório, Hotel, Teatro, Cinema...
+  endereco       String?
+  bairro         String?
+  cidade         String?
+  uf             String?
+  cep            String?
+  site           String?
+  instagram      String?
+  telefone       String?
+  telefoneDigits String?
+  email          String?
+  capacidade     Int? // capacidade máxima de pessoas
+  capacidadeNota String? // observação sobre a capacidade (ex.: "300 sentados / 500 em pé")
+  descricao      String?
+  lat            Float?
+  lng            Float?
+  origem         String    @default("cadastro")
+  status         String    @default("pendente")
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+
+  @@index([tipo])
+  @@index([uf])
+  @@index([cidade])
+}
+
 model Fornecedor {
   id                 Int       @id @default(autoincrement())
   token              String    @unique
