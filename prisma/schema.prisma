@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Índices para busca/filtro rápidos com ~15k linhas em produção.
+
+model Fornecedor {
+  id                 Int       @id @default(autoincrement())
+  token              String    @unique
+  nome               String
+  razaoSocial        String?
+  cnpj               String?
+  inscricaoMunicipal String?
+  endereco           String?
+  bairro             String?
+  cidade             String?
+  uf                 String?
+  cep                String?
+  categoria          String?
+  servicos           String?
+  regioes            String?
+  contato            String?
+  telefone           String?
+  telefoneDigits     String?
+  email              String?
+  site               String?
+  instagram          String?
+  observacoes        String?
+  origem             String    @default("cadastro")
+  status             String    @default("pendente")
+  rsvpEnviadoEm      DateTime?
+  criadoEm           DateTime  @default(now())
+  atualizadoEm       DateTime  @updatedAt
+
+  @@index([categoria])
+  @@index([uf])
+  @@index([status])
+  @@index([telefoneDigits])
+}
