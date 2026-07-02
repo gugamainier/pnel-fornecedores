@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
+import { sanitizaBody } from "@/lib/fornecedor";
 
 export async function PATCH(
   req: Request,
@@ -13,13 +14,37 @@ export async function PATCH(
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "body inválido" }, { status: 400 });
 
-  const data: { rsvpEnviadoEm?: Date | null } = {};
+  // Toggle rápido do RSVP (usado na fila de disparo)
   if ("rsvpEnviado" in body) {
-    data.rsvpEnviadoEm = body.rsvpEnviado ? new Date() : null;
+    const f = await prisma.fornecedor.update({
+      where: { id: Number(id) },
+      data: { rsvpEnviadoEm: body.rsvpEnviado ? new Date() : null },
+    });
+    return NextResponse.json({ ok: true, rsvpEnviadoEm: f.rsvpEnviadoEm });
   }
-  const fornecedor = await prisma.fornecedor.update({
+
+  // Edição completa pelo admin (todos os campos + status)
+  const data = sanitizaBody(body);
+  const status =
+    body.status === "confirmado" || body.status === "pendente"
+      ? body.status
+      : undefined;
+  await prisma.fornecedor.update({
     where: { id: Number(id) },
-    data,
+    // nome nunca é apagado: sem valor novo, mantém o atual
+    data: { ...data, nome: data.nome ?? undefined, ...(status ? { status } : {}) },
   });
-  return NextResponse.json({ ok: true, rsvpEnviadoEm: fornecedor.rsvpEnviadoEm });
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "não autorizado" }, { status: 401 });
+  }
+  const { id } = await params;
+  await prisma.fornecedor.delete({ where: { id: Number(id) } });
+  return NextResponse.json({ ok: true });
 }

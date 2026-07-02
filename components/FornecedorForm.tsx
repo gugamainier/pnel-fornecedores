@@ -67,10 +67,18 @@ export default function FornecedorForm({
   initial = {},
   endpoint,
   submitLabel,
+  method = "POST",
+  redirectTo = "/obrigado",
+  admin = false,
+  status,
 }: {
   initial?: FornecedorFormData;
   endpoint: string;
   submitLabel: string;
+  method?: "POST" | "PATCH";
+  redirectTo?: string;
+  admin?: boolean;
+  status?: string | null;
 }) {
   const router = useRouter();
   const [sending, setSending] = useState(false);
@@ -82,14 +90,15 @@ export default function FornecedorForm({
     setError(null);
     const data = Object.fromEntries(new FormData(e.currentTarget).entries());
     const res = await fetch(endpoint, {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     if (res.ok) {
-      router.push("/obrigado");
+      router.push(redirectTo);
+      router.refresh();
     } else {
-      setError("Não foi possível enviar. Verifique os campos e tente novamente.");
+      setError("Não foi possível salvar. Verifique os campos e tente novamente.");
       setSending(false);
     }
   }
@@ -192,6 +201,22 @@ export default function FornecedorForm({
         </div>
       </section>
 
+      {admin && (
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-lg font-semibold text-slate-900">
+            Controle interno
+          </h2>
+          <p className="mb-5 text-sm text-slate-500">Visível apenas para a equipe.</p>
+          <div>
+            <label className={labelCls} htmlFor="status">Status do cadastro</label>
+            <select id="status" name="status" defaultValue={status ?? "pendente"} className={inputCls}>
+              <option value="pendente">Pendente</option>
+              <option value="confirmado">Confirmado</option>
+            </select>
+          </div>
+        </section>
+      )}
+
       {error && (
         <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
       )}
@@ -201,7 +226,7 @@ export default function FornecedorForm({
         disabled={sending}
         className="w-full rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60 sm:w-auto"
       >
-        {sending ? "Enviando…" : submitLabel}
+        {sending ? "Salvando…" : submitLabel}
       </button>
     </form>
   );

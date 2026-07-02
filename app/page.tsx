@@ -156,9 +156,7 @@ export default async function ConsultaPage({
                     )}
                     <CopyRsvpButton token={f.token} />
                     <a
-                      href={`/confirmar/${f.token}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/admin/fornecedor/${f.id}`}
                       className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
                     >
                       Editar

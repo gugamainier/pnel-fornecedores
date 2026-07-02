@@ -7,6 +7,7 @@ const links = [
   { href: "/", label: "Consulta" },
   { href: "/disparo", label: "Disparo RSVP" },
   { href: "/cadastro", label: "Formulário público" },
+  { href: "/conta", label: "Minha conta" },
 ];
 
 export default function AdminNav() {
