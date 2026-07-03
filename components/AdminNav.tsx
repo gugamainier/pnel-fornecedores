@@ -8,8 +8,8 @@ import PnelLogo from "@/components/PnelLogo";
 const links = [
   { href: "/", label: "Consulta" },
   { href: "/locais", label: "Locais de Eventos" },
-  { href: "/disparo", label: "Disparo WhatsApp" },
-  { href: "/disparo-email", label: "Disparo E-mail" },
+  { href: "/disparo", label: "Disparo WhatsApp", adminOnly: true },
+  { href: "/disparo-email", label: "Disparo E-mail", adminOnly: true },
   { href: "/cadastro", label: "Formulário público" },
   { href: "/admin/usuarios", label: "Usuários", adminOnly: true },
   { href: "/conta", label: "Minha conta" },

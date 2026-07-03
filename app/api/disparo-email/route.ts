@@ -28,6 +28,9 @@ export async function GET() {
 export async function POST(req: Request) {
   const usuario = await usuarioAtual();
   if (!usuario) return NextResponse.json({ error: "não autorizado" }, { status: 401 });
+  if (usuario.papel !== "admin") {
+    return NextResponse.json({ error: "apenas admin pode disparar" }, { status: 403 });
+  }
   if (!emailConfigurado()) {
     return NextResponse.json(
       { error: "envio de e-mail não configurado (defina SMTP_* e EMAIL_FROM)" },

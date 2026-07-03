@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
 import FornecedorForm from "@/components/FornecedorForm";
 import DeleteFornecedorButton from "@/components/DeleteFornecedorButton";
@@ -14,7 +14,7 @@ export default async function EditarFornecedorPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAuth();
+  await requireAdmin();
   const { id } = await params;
   const fornecedor = await prisma.fornecedor.findUnique({
     where: { id: Number(id) },

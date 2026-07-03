@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
 import DisparoEmail from "@/components/DisparoEmail";
 
@@ -6,7 +6,7 @@ export const metadata = { title: "Disparo por e-mail · PNEL" };
 export const dynamic = "force-dynamic";
 
 export default async function DisparoEmailPage() {
-  await requireAuth();
+  await requireAdmin();
   return (
     <>
       <AdminNav />

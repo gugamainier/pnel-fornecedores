@@ -227,7 +227,7 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                       COTAR
                     </a>
                   )}
-                  <CopyRsvpButton token={f.token} />
+                  {f.status !== "confirmado" && <CopyRsvpButton token={f.token} />}
                   <AvaliarButton
                     fornecedorId={f.id}
                     nome={f.nome}
@@ -241,12 +241,14 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                       )
                     }
                   />
-                  <a
-                    href={`/admin/fornecedor/${f.id}`}
-                    className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                  >
-                    Editar
-                  </a>
+                  {isAdmin && (
+                    <a
+                      href={`/admin/fornecedor/${f.id}`}
+                      className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                    >
+                      Editar
+                    </a>
+                  )}
                   {isAdmin && <RemoverFornecedorCard id={f.id} nome={f.nome} />}
                 </div>
               </li>
