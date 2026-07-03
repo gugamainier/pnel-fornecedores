@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import FornecedorForm from "@/components/FornecedorForm";
 import PnelLogo from "@/components/PnelLogo";
+import RecusarBotoes from "@/components/RecusarBotoes";
 
 export const metadata = { title: "Confirme seu cadastro · PNEL" };
 
@@ -38,6 +39,7 @@ export default async function ConfirmarPage({
         submitLabel="Confirmar cadastro"
         empresaObrigatoria
       />
+      <RecusarBotoes token={fornecedor.token} />
     </main>
   );
 }

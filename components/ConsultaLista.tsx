@@ -36,6 +36,8 @@ function semAcento(s: string): string {
 const statusBadge: Record<string, { label: string; cls: string }> = {
   confirmado: { label: "Confirmado", cls: "bg-fxgreen-100 text-fxgreen-700" },
   pendente: { label: "Pendente", cls: "bg-amber-100 text-amber-700" },
+  recusado: { label: "Não presta serviços", cls: "bg-slate-200 text-slate-600" },
+  incorreto: { label: "Contato incorreto", cls: "bg-red-100 text-red-700" },
 };
 
 const selectCls =
@@ -153,6 +155,8 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
           <option value="">Todos os status</option>
           <option value="confirmado">Confirmados</option>
           <option value="pendente">Pendentes</option>
+          <option value="recusado">Não prestam serviços</option>
+          <option value="incorreto">Contato incorreto</option>
         </select>
         <select value={ordem} onChange={(e) => setOrdem(e.target.value)} className={selectCls}>
           <option value="nome">Ordem: A–Z</option>
@@ -227,7 +231,7 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                       COTAR
                     </a>
                   )}
-                  {f.status !== "confirmado" && <CopyRsvpButton token={f.token} />}
+                  {f.status === "pendente" && <CopyRsvpButton token={f.token} />}
                   <AvaliarButton
                     fornecedorId={f.id}
                     nome={f.nome}

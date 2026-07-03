@@ -287,6 +287,8 @@ export default function FornecedorForm({
             <select id="status" name="status" defaultValue={status ?? "pendente"} className={inputCls}>
               <option value="pendente">Pendente</option>
               <option value="confirmado">Confirmado</option>
+              <option value="recusado">Não presta serviços</option>
+              <option value="incorreto">Contato incorreto</option>
             </select>
           </div>
         </section>

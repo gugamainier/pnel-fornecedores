@@ -27,10 +27,11 @@ export async function PATCH(
 
   // Edição completa pelo admin (todos os campos + status)
   const data = sanitizaBody(body);
-  const status =
-    body.status === "confirmado" || body.status === "pendente"
-      ? body.status
-      : undefined;
+  const status = ["confirmado", "pendente", "recusado", "incorreto"].includes(
+    body.status
+  )
+    ? body.status
+    : undefined;
   await prisma.fornecedor.update({
     where: { id: Number(id) },
     // nome nunca é apagado: sem valor novo, mantém o atual

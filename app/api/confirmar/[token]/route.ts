@@ -14,6 +14,25 @@ export async function POST(
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "body inválido" }, { status: 400 });
 
+  // opt-out: fornecedor não quer prestar serviços ou o contato está errado
+  if (body.acao === "recusar" || body.acao === "incorreto") {
+    const status = body.acao === "recusar" ? "recusado" : "incorreto";
+    const nota =
+      body.acao === "recusar"
+        ? "Optou por não prestar serviços à PNEL (via link RSVP)"
+        : "Contato marcado como incorreto pelo destinatário (via link RSVP)";
+    await prisma.fornecedor.update({
+      where: { token },
+      data: {
+        status,
+        observacoes: existente.observacoes
+          ? `${existente.observacoes} | ${nota}`
+          : nota,
+      },
+    });
+    return NextResponse.json({ ok: true, status });
+  }
+
   const data = sanitizaBody(body);
   await prisma.fornecedor.update({
     where: { token },
