@@ -73,6 +73,7 @@ model Fornecedor {
   origem             String    @default("cadastro")
   status             String    @default("pendente")
   rsvpEnviadoEm      DateTime?
+  rsvpEmailEnviadoEm DateTime?
   notaMedia          Float?
   numAvaliacoes      Int       @default(0)
   avaliacoes         Avaliacao[]
