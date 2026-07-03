@@ -96,7 +96,7 @@ export default function DisparoEmail() {
           <b>Envio de e-mail ainda não configurado.</b> Adicione nas variáveis de
           ambiente da Vercel: <code>SMTP_HOST</code>, <code>SMTP_PORT</code>,{" "}
           <code>SMTP_USER</code>, <code>SMTP_PASS</code> e <code>EMAIL_FROM</code> (ex.:{" "}
-          <code>PNEL Fornecedores &lt;fornecedores@pnel.ag&gt;</code>). Depois do
+          <code>PNEL &lt;sejaumfornecedor@pnel.ag&gt;</code>). Depois do
           Redeploy, esta tela libera o envio.
         </div>
       )}
