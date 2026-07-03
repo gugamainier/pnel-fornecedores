@@ -15,6 +15,10 @@ export default function DisparoEmail() {
   const [limite, setLimite] = useState(50);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [assunto, setAssunto] = useState("");
+  const [corpo, setCorpo] = useState("");
+  const [salvandoMsg, setSalvandoMsg] = useState<null | "salvando" | "salvo">(null);
 
   async function carregar() {
     const r = await fetch("/api/disparo-email");
@@ -22,7 +26,29 @@ export default function DisparoEmail() {
   }
   useEffect(() => {
     carregar();
+    fetch("/api/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => setIsAdmin(u?.papel === "admin"));
+    fetch("/api/config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((c) => {
+        if (c) {
+          setAssunto(c.msgEmailAssunto ?? "");
+          setCorpo(c.msgEmailCorpo ?? "");
+        }
+      });
   }, []);
+
+  async function salvarMensagem() {
+    setSalvandoMsg("salvando");
+    await fetch("/api/config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ msgEmailAssunto: assunto, msgEmailCorpo: corpo }),
+    });
+    setSalvandoMsg("salvo");
+    setTimeout(() => setSalvandoMsg(null), 2000);
+  }
 
   async function enviarTeste() {
     if (!emailTeste) return;
@@ -86,6 +112,44 @@ export default function DisparoEmail() {
             <p className="text-xs text-slate-500">{s.l}</p>
           </div>
         ))}
+      </div>
+
+      {/* mensagem */}
+      <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="mb-1 text-sm font-semibold text-slate-900">Mensagem do e-mail</h2>
+        <p className="mb-3 text-xs text-slate-500">
+          Use {"{nome}"} e {"{link}"}. O botão de confirmação é adicionado automaticamente.
+        </p>
+        <input
+          value={assunto}
+          onChange={(e) => setAssunto(e.target.value)}
+          readOnly={!isAdmin}
+          placeholder="Assunto"
+          className="mb-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+        />
+        <textarea
+          value={corpo}
+          onChange={(e) => setCorpo(e.target.value)}
+          readOnly={!isAdmin}
+          rows={7}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs text-slate-800 focus:border-brand-500 focus:outline-none"
+        />
+        {isAdmin ? (
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              onClick={salvarMensagem}
+              disabled={salvandoMsg === "salvando"}
+              className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              {salvandoMsg === "salvando" ? "Salvando…" : "Salvar mensagem"}
+            </button>
+            {salvandoMsg === "salvo" && (
+              <span className="text-xs text-fxgreen-700">Salva.</span>
+            )}
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-slate-400">Só o admin pode editar a mensagem.</p>
+        )}
       </div>
 
       {/* teste */}

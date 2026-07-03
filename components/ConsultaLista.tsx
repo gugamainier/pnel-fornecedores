@@ -48,6 +48,7 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
   const [uf, setUf] = useState("");
   const [status, setStatus] = useState("");
   const [ordem, setOrdem] = useState("nome");
+  const [mostrar, setMostrar] = useState(LIMITE);
 
   useEffect(() => {
     fetch("/api/fornecedores?full=1")
@@ -55,6 +56,11 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
       .then(setTodos)
       .catch(() => setTodos([]));
   }, []);
+
+  // ao mudar busca/filtros, volta a mostrar o primeiro bloco
+  useEffect(() => {
+    setMostrar(LIMITE);
+  }, [q, cat, uf, status, ordem]);
 
   const categorias = useMemo(() => {
     if (!todos) return [];
@@ -86,6 +92,18 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
           a.nome.localeCompare(b.nome, "pt-BR")
       );
     }
+    // com busca: ranqueia por relevância no NOME (começa com > contém > casou em outro campo)
+    if (termo) {
+      const rel = (f: Fornecedor) => {
+        const n = semAcento(f.nome);
+        if (n.startsWith(termo)) return 3;
+        if (n.includes(termo)) return 2;
+        return 1;
+      };
+      return [...filtrada].sort(
+        (a, b) => rel(b) - rel(a) || a.nome.localeCompare(b.nome, "pt-BR")
+      );
+    }
     return filtrada;
   }, [todos, q, cat, uf, status, ordem]);
 
@@ -94,8 +112,7 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
     [todos]
   );
 
-  const visiveis = lista.slice(0, LIMITE);
-  const filtrando = Boolean(q || cat || uf || status);
+  const visiveis = lista.slice(0, mostrar);
 
   return (
     <>
@@ -238,13 +255,18 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
         </ul>
       )}
 
-      {lista.length > LIMITE && (
-        <p className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center text-sm text-slate-500">
-          Mostrando os primeiros {LIMITE} de {lista.length} resultados.{" "}
-          {filtrando
-            ? "Refine a busca para chegar no fornecedor certo."
-            : "Use a busca ou os filtros acima para encontrar um fornecedor específico."}
-        </p>
+      {lista.length > mostrar && (
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <p className="text-sm text-slate-500">
+            Mostrando {mostrar.toLocaleString("pt-BR")} de {lista.length.toLocaleString("pt-BR")} resultados.
+          </p>
+          <button
+            onClick={() => setMostrar((m) => m + LIMITE)}
+            className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+          >
+            Carregar mais {Math.min(LIMITE, lista.length - mostrar)}
+          </button>
+        </div>
       )}
     </>
   );

@@ -55,7 +55,9 @@ model Fornecedor {
   razaoSocial        String?
   cnpj               String?
   inscricaoMunicipal String?
-  endereco           String?
+  endereco           String? // rua / logradouro
+  numero             String?
+  complemento        String?
   bairro             String?
   cidade             String?
   uf                 String?
@@ -70,6 +72,12 @@ model Fornecedor {
   site               String?
   instagram          String?
   observacoes        String?
+  banco              String?
+  agencia            String?
+  conta              String?
+  pix                String?
+  regimeTributario   String? // MEI | Simples | Lucro Presumido | Lucro Real
+  cpfPagamento       String?
   origem             String    @default("cadastro")
   status             String    @default("pendente")
   rsvpEnviadoEm      DateTime?
@@ -84,6 +92,11 @@ model Fornecedor {
   @@index([uf])
   @@index([status])
   @@index([telefoneDigits])
+}
+
+model Configuracao {
+  chave String @id
+  valor String
 }
 
 model Avaliacao {

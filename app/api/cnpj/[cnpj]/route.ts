@@ -39,8 +39,9 @@ export async function GET(
       nomeFantasia: d.nome_fantasia ?? null,
       situacao,
       ativa: String(situacao ?? "").toUpperCase() === "ATIVA",
-      endereco:
-        [d.logradouro, d.numero, d.complemento].filter(Boolean).join(", ") || null,
+      logradouro: d.logradouro ?? null,
+      numero: d.numero ? String(d.numero) : null,
+      complemento: d.complemento ?? null,
       bairro: d.bairro ?? null,
       municipio: d.municipio ?? null,
       uf: d.uf ?? null,

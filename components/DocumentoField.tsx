@@ -13,7 +13,9 @@ type Receita = {
   razaoSocial: string | null;
   situacao: string | null;
   ativa: boolean;
-  endereco: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  complemento: string | null;
   bairro: string | null;
   municipio: string | null;
   uf: string | null;
@@ -103,7 +105,9 @@ export default function DocumentoField({
     const d = status?.dados;
     if (!d) return;
     setCampo("razaoSocial", d.razaoSocial);
-    setCampo("endereco", d.endereco);
+    setCampo("endereco", d.logradouro);
+    setCampo("numero", d.numero);
+    setCampo("complemento", d.complemento);
     setCampo("bairro", d.bairro);
     setCampo("cidade", d.municipio);
     setCampo("uf", d.uf);

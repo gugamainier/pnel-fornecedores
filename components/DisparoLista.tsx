@@ -30,18 +30,31 @@ export default function DisparoLista() {
   const [template, setTemplate] = useState(TEMPLATE_PADRAO);
   const [mostrarEnviados, setMostrarEnviados] = useState(false);
   const [busca, setBusca] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [salvandoMsg, setSalvandoMsg] = useState<null | "salvando" | "salvo">(null);
 
   useEffect(() => {
-    const salvo = localStorage.getItem("pnel_template_rsvp");
-    if (salvo) setTemplate(salvo);
+    fetch("/api/config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((c) => c?.msgWhatsapp && setTemplate(c.msgWhatsapp));
+    fetch("/api/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => setIsAdmin(u?.papel === "admin"));
     fetch("/api/fornecedores")
       .then((r) => r.json())
       .then(setFornecedores);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("pnel_template_rsvp", template);
-  }, [template]);
+  async function salvarMensagem() {
+    setSalvandoMsg("salvando");
+    await fetch("/api/config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ msgWhatsapp: template }),
+    });
+    setSalvandoMsg("salvo");
+    setTimeout(() => setSalvandoMsg(null), 2000);
+  }
 
   const pendentes = useMemo(() => {
     if (!fornecedores) return [];
@@ -120,17 +133,32 @@ export default function DisparoLista() {
 
       <div className="rounded-xl border border-slate-200 bg-white p-5">
         <label className="mb-1 block text-sm font-medium text-slate-700">
-          Mensagem padrão{" "}
-          <span className="font-normal text-slate-400">
-            — use {"{nome}"} e {"{link}"}; fica salva neste navegador
-          </span>
+          Mensagem padrão do WhatsApp{" "}
+          <span className="font-normal text-slate-400">— use {"{nome}"} e {"{link}"}</span>
         </label>
         <textarea
           value={template}
           onChange={(e) => setTemplate(e.target.value)}
           rows={8}
+          readOnly={!isAdmin}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs text-slate-800 focus:border-brand-500 focus:outline-none"
         />
+        {isAdmin ? (
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              onClick={salvarMensagem}
+              disabled={salvandoMsg === "salvando"}
+              className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              {salvandoMsg === "salvando" ? "Salvando…" : "Salvar mensagem"}
+            </button>
+            {salvandoMsg === "salvo" && (
+              <span className="text-xs text-fxgreen-700">Salva para toda a equipe.</span>
+            )}
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-slate-400">Só o admin pode editar a mensagem padrão.</p>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

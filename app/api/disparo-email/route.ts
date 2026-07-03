@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { usuarioAtual } from "@/lib/auth";
 import { emailConfigurado, enviarEmail, montarEmailRsvp } from "@/lib/email";
+import { getConfig } from "@/lib/config";
 
 function baseUrl(req: Request): string {
   const proto = req.headers.get("x-forwarded-proto") ?? "https";
@@ -39,12 +40,15 @@ export async function POST(req: Request) {
     );
   }
   const body = await req.json().catch(() => null);
+  const cfg = await getConfig();
+  const templates = { assunto: cfg.msgEmailAssunto, corpo: cfg.msgEmailCorpo };
 
   // envio de teste para um endereço qualquer
   if (body?.teste) {
     const { assunto, texto, html } = montarEmailRsvp(
       usuario.nome,
-      `${baseUrl(req)}/cadastro`
+      `${baseUrl(req)}/cadastro`,
+      templates
     );
     try {
       await enviarEmail({ para: String(body.teste), assunto, texto, html });
@@ -71,7 +75,8 @@ export async function POST(req: Request) {
     try {
       const { assunto, texto, html } = montarEmailRsvp(
         f.nome,
-        `${base}/confirmar/${f.token}`
+        `${base}/confirmar/${f.token}`,
+        templates
       );
       await enviarEmail({ para: f.email!, assunto, texto, html });
       await prisma.fornecedor.update({

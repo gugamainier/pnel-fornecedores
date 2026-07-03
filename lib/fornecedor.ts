@@ -6,6 +6,8 @@ export const CAMPOS_EDITAVEIS = [
   "cnpj",
   "inscricaoMunicipal",
   "endereco",
+  "numero",
+  "complemento",
   "bairro",
   "cidade",
   "uf",
@@ -19,6 +21,12 @@ export const CAMPOS_EDITAVEIS = [
   "site",
   "instagram",
   "observacoes",
+  "banco",
+  "agencia",
+  "conta",
+  "pix",
+  "regimeTributario",
+  "cpfPagamento",
 ] as const;
 
 export function novoToken(): string {

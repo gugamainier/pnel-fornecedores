@@ -11,6 +11,8 @@ export type FornecedorFormData = {
   cnpj?: string | null;
   inscricaoMunicipal?: string | null;
   endereco?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
   bairro?: string | null;
   cidade?: string | null;
   uf?: string | null;
@@ -24,6 +26,12 @@ export type FornecedorFormData = {
   site?: string | null;
   instagram?: string | null;
   observacoes?: string | null;
+  banco?: string | null;
+  agencia?: string | null;
+  conta?: string | null;
+  pix?: string | null;
+  regimeTributario?: string | null;
+  cpfPagamento?: string | null;
 };
 
 const inputCls =
@@ -86,6 +94,8 @@ export default function FornecedorForm({
   const router = useRouter();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [regime, setRegime] = useState(initial.regimeTributario ?? "");
+  const [informarCpf, setInformarCpf] = useState(Boolean(initial.cpfPagamento));
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -121,8 +131,10 @@ export default function FornecedorForm({
           <DocumentoField defaultValue={initial.cnpj} required={empresaObrigatoria} />
           <Field label="Inscrição Municipal" name="inscricaoMunicipal" defaultValue={initial.inscricaoMunicipal} />
           <div className="sm:col-span-2">
-            <Field label="Endereço (com número e complemento)" name="endereco" required={empresaObrigatoria} defaultValue={initial.endereco} />
+            <Field label="Rua / Logradouro" name="endereco" required={empresaObrigatoria} defaultValue={initial.endereco} />
           </div>
+          <Field label="Número" name="numero" required={empresaObrigatoria} defaultValue={initial.numero} />
+          <Field label="Complemento" name="complemento" defaultValue={initial.complemento} placeholder="sala, andar, bloco…" />
           <Field label="Bairro" name="bairro" required={empresaObrigatoria} defaultValue={initial.bairro} />
           <Field label="Cidade" name="cidade" required={empresaObrigatoria} defaultValue={initial.cidade} />
           <div>
@@ -203,6 +215,63 @@ export default function FornecedorForm({
               className={inputCls}
             />
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-1 text-lg font-semibold text-slate-900">Dados financeiros</h2>
+        <p className="mb-5 text-sm text-slate-500">
+          Para pagamentos e emissão de nota. Usados apenas pela equipe financeira da PNEL.
+        </p>
+
+        <div className="mb-4">
+          <label className={labelCls} htmlFor="regimeTributario">
+            Regime tributário{empresaObrigatoria && <span className="text-red-500"> *</span>}
+          </label>
+          <select
+            id="regimeTributario"
+            name="regimeTributario"
+            required={empresaObrigatoria}
+            value={regime}
+            onChange={(e) => setRegime(e.target.value)}
+            className={inputCls}
+          >
+            <option value="">Selecione…</option>
+            <option value="MEI">MEI</option>
+            <option value="Simples">Simples Nacional</option>
+            <option value="Lucro Presumido">Lucro Presumido</option>
+            <option value="Lucro Real">Lucro Real</option>
+          </select>
+        </div>
+
+        {regime === "MEI" ? (
+          <div className="mb-4 rounded-lg bg-slate-50 p-4">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <input
+                type="checkbox"
+                checked={informarCpf}
+                onChange={(e) => setInformarCpf(e.target.checked)}
+              />
+              Deseja informar o CPF para pagamento?
+            </label>
+            {informarCpf && (
+              <div className="mt-3">
+                <Field label="CPF para pagamento" name="cpfPagamento" defaultValue={initial.cpfPagamento} placeholder="000.000.000-00" />
+              </div>
+            )}
+          </div>
+        ) : regime ? (
+          <p className="mb-4 rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-700">
+            Os dados fiscais serão usados a partir do <b>CNPJ</b> validado no cadastro
+            (razão social e situação da Receita).
+          </p>
+        ) : null}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Banco" name="banco" defaultValue={initial.banco} />
+          <Field label="Agência" name="agencia" defaultValue={initial.agencia} />
+          <Field label="Conta" name="conta" defaultValue={initial.conta} />
+          <Field label="Chave Pix" name="pix" defaultValue={initial.pix} placeholder="CPF/CNPJ, e-mail, telefone ou chave aleatória" />
         </div>
       </section>
 
