@@ -22,6 +22,8 @@ export async function GET(req: Request) {
       status: true,
       token: true,
       rsvpEnviadoEm: true,
+      notaMedia: true,
+      numAvaliacoes: true,
       ...(full
         ? {
             servicos: true,

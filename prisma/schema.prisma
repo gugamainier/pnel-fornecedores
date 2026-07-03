@@ -73,6 +73,9 @@ model Fornecedor {
   origem             String    @default("cadastro")
   status             String    @default("pendente")
   rsvpEnviadoEm      DateTime?
+  notaMedia          Float?
+  numAvaliacoes      Int       @default(0)
+  avaliacoes         Avaliacao[]
   criadoEm           DateTime  @default(now())
   atualizadoEm       DateTime  @updatedAt
 
@@ -80,4 +83,17 @@ model Fornecedor {
   @@index([uf])
   @@index([status])
   @@index([telefoneDigits])
+}
+
+model Avaliacao {
+  id           Int        @id @default(autoincrement())
+  fornecedorId Int
+  fornecedor   Fornecedor @relation(fields: [fornecedorId], references: [id], onDelete: Cascade)
+  usuarioNome  String?
+  nota         Int // 1 a 5
+  comentario   String?
+  evento       String?
+  criadoEm     DateTime   @default(now())
+
+  @@index([fornecedorId])
 }

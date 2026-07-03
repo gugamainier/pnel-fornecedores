@@ -5,6 +5,8 @@ import { UFS } from "@/lib/categorias";
 import CopyRsvpButton from "@/components/CopyRsvpButton";
 import RemoverFornecedorCard from "@/components/RemoverFornecedorCard";
 import ConvidarFornecedor from "@/components/ConvidarFornecedor";
+import AvaliarButton from "@/components/AvaliarButton";
+import { EstrelasNota } from "@/components/Estrelas";
 
 type Fornecedor = {
   id: number;
@@ -21,6 +23,8 @@ type Fornecedor = {
   email: string | null;
   observacoes: string | null;
   regioes: string | null;
+  notaMedia: number | null;
+  numAvaliacoes: number;
 };
 
 const LIMITE = 300;
@@ -43,6 +47,7 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
   const [cat, setCat] = useState("");
   const [uf, setUf] = useState("");
   const [status, setStatus] = useState("");
+  const [ordem, setOrdem] = useState("nome");
 
   useEffect(() => {
     fetch("/api/fornecedores?full=1")
@@ -62,7 +67,7 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
     if (!todos) return [];
     const termo = semAcento(q.trim());
     const termos = termo ? termo.split(/\s+/) : [];
-    return todos.filter((f) => {
+    const filtrada = todos.filter((f) => {
       if (cat && (cat === "(sem)" ? f.categoria : f.categoria !== cat)) return false;
       if (uf && f.uf !== uf) return false;
       if (status && f.status !== status) return false;
@@ -74,7 +79,15 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
       );
       return termos.every((t) => alvo.includes(t));
     });
-  }, [todos, q, cat, uf, status]);
+    if (ordem === "nota") {
+      return [...filtrada].sort(
+        (a, b) =>
+          (b.notaMedia ?? -1) - (a.notaMedia ?? -1) ||
+          a.nome.localeCompare(b.nome, "pt-BR")
+      );
+    }
+    return filtrada;
+  }, [todos, q, cat, uf, status, ordem]);
 
   const confirmados = useMemo(
     () => (todos ? todos.filter((f) => f.status === "confirmado").length : 0),
@@ -124,6 +137,10 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
           <option value="confirmado">Confirmados</option>
           <option value="pendente">Pendentes</option>
         </select>
+        <select value={ordem} onChange={(e) => setOrdem(e.target.value)} className={selectCls}>
+          <option value="nome">Ordem: A–Z</option>
+          <option value="nota">Melhor avaliados</option>
+        </select>
       </div>
 
       {todos === null ? (
@@ -151,6 +168,11 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                         .filter(Boolean)
                         .join(" · ")}
                     </p>
+                    {f.numAvaliacoes > 0 && (
+                      <div className="mt-1">
+                        <EstrelasNota nota={f.notaMedia} total={f.numAvaliacoes} />
+                      </div>
+                    )}
                   </div>
                   <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.cls}`}>
                     {badge.label}
@@ -189,6 +211,19 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                     </a>
                   )}
                   <CopyRsvpButton token={f.token} />
+                  <AvaliarButton
+                    fornecedorId={f.id}
+                    nome={f.nome}
+                    onAvaliado={(media, num) =>
+                      setTodos((prev) =>
+                        prev
+                          ? prev.map((x) =>
+                              x.id === f.id ? { ...x, notaMedia: media, numAvaliacoes: num } : x
+                            )
+                          : prev
+                      )
+                    }
+                  />
                   <a
                     href={`/admin/fornecedor/${f.id}`}
                     className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"

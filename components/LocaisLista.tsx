@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { UFS } from "@/lib/categorias";
+
+const LocaisMapa = dynamic(() => import("@/components/LocaisMapa"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[70vh] items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-500">
+      Carregando mapa…
+    </div>
+  ),
+});
 
 type Local = {
   id: number;
@@ -20,6 +30,8 @@ type Local = {
   capacidadeNota: string | null;
   descricao: string | null;
   status: string;
+  lat: number | null;
+  lng: number | null;
 };
 
 const LIMITE = 300;
@@ -50,6 +62,7 @@ export default function LocaisLista({ isAdmin }: { isAdmin: boolean }) {
   const [uf, setUf] = useState("");
   const [faixa, setFaixa] = useState("");
   const [addAberto, setAddAberto] = useState(false);
+  const [visao, setVisao] = useState<"lista" | "mapa">("lista");
 
   async function carregar() {
     const r = await fetch("/api/locais");
@@ -126,12 +139,28 @@ export default function LocaisLista({ isAdmin }: { isAdmin: boolean }) {
               : `${lista.length} de ${todos.length} espaços`}
           </p>
         </div>
-        <button
-          onClick={() => setAddAberto((v) => !v)}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
-        >
-          + Adicionar espaço
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex overflow-hidden rounded-lg border border-slate-200 text-sm">
+            <button
+              onClick={() => setVisao("lista")}
+              className={`px-3 py-1.5 font-medium ${visao === "lista" ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-50"}`}
+            >
+              Lista
+            </button>
+            <button
+              onClick={() => setVisao("mapa")}
+              className={`px-3 py-1.5 font-medium ${visao === "mapa" ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-50"}`}
+            >
+              Mapa
+            </button>
+          </div>
+          <button
+            onClick={() => setAddAberto((v) => !v)}
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+          >
+            + Adicionar espaço
+          </button>
+        </div>
       </div>
 
       {addAberto && (
@@ -198,7 +227,9 @@ export default function LocaisLista({ isAdmin }: { isAdmin: boolean }) {
         </select>
       </div>
 
-      {todos === null ? (
+      {visao === "mapa" ? (
+        <LocaisMapa locais={lista} />
+      ) : todos === null ? (
         <p className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
           Carregando espaços…
         </p>
