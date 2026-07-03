@@ -19,6 +19,7 @@ export default function UsuariosManager({ meuId }: { meuId: number }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [papel, setPapel] = useState("produtor");
+  const [enviarEmail, setEnviarEmail] = useState(true);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
 
@@ -37,11 +38,16 @@ export default function UsuariosManager({ meuId }: { meuId: number }) {
     const r = await fetch("/api/usuarios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, email, senha, papel }),
+      body: JSON.stringify({ nome, email, senha, papel, enviarEmail }),
     });
     const data = await r.json().catch(() => ({}));
     if (r.ok) {
-      setMsg({ ok: true, texto: `Acesso criado para ${data.email}.` });
+      const aviso = data.emailEnviado
+        ? " E-mail de boas-vindas enviado com os dados de acesso."
+        : enviarEmail
+          ? ` (e-mail não enviado: ${data.emailErro ?? "erro"} — informe o acesso manualmente)`
+          : "";
+      setMsg({ ok: true, texto: `Acesso criado para ${data.email}.${aviso}` });
       setNome("");
       setEmail("");
       setSenha("");
@@ -107,6 +113,14 @@ export default function UsuariosManager({ meuId }: { meuId: number }) {
             <option value="admin">Admin (controle total)</option>
           </select>
         </div>
+        <label className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={enviarEmail}
+            onChange={(e) => setEnviarEmail(e.target.checked)}
+          />
+          Enviar e-mail de boas-vindas com o link de acesso e a senha inicial
+        </label>
         <button
           type="submit"
           disabled={salvando || !nome || !email || !senha}

@@ -43,6 +43,45 @@ export async function enviarEmail(opts: {
   });
 }
 
+/** E-mail de boas-vindas para um novo usuário do sistema (equipe/produtor). */
+export function montarEmailBoasVindas(opts: {
+  nome: string;
+  email: string;
+  senhaInicial?: string;
+  linkLogin: string;
+}) {
+  const primeiro = (opts.nome ?? "").split(" ")[0] || "";
+  const assunto = "Seu acesso à Base de Fornecedores da PNEL";
+  const linhaSenha = opts.senhaInicial
+    ? `Senha inicial: ${opts.senhaInicial}\n(troque depois em "Minha conta")`
+    : `A senha inicial será informada pela equipe.`;
+  const texto = `Olá, ${primeiro}!
+
+Sua conta na Base de Fornecedores da PNEL foi criada. Você já pode acessar:
+
+${opts.linkLogin}
+
+Login: ${opts.email}
+${linhaSenha}
+
+Lá você consulta os fornecedores e locais de eventos da PNEL, com busca por categoria, cidade e capacidade.
+
+Bom trabalho!
+Equipe PNEL`;
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#212121">
+  <p>Olá, ${primeiro}!</p>
+  <p>Sua conta na <b>Base de Fornecedores da PNEL</b> foi criada. Você já pode acessar:</p>
+  <p style="text-align:center;margin:28px 0">
+    <a href="${opts.linkLogin}" style="background:#0087ff;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;display:inline-block">Acessar o sistema</a>
+  </p>
+  <p><b>Login:</b> ${opts.email}<br>
+  ${opts.senhaInicial ? `<b>Senha inicial:</b> ${opts.senhaInicial}<br><span style="color:#6b7280;font-size:13px">Troque depois em “Minha conta”.</span>` : `<span style="color:#6b7280;font-size:13px">A senha inicial será informada pela equipe.</span>`}</p>
+  <p style="color:#6b7280;font-size:13px">Lá você consulta os fornecedores e locais de eventos da PNEL, com busca por categoria, cidade e capacidade.</p>
+  <p style="color:#6b7280;font-size:13px">Se o botão não funcionar, copie e cole no navegador:<br>${opts.linkLogin}</p>
+</div>`;
+  return { assunto, texto, html };
+}
+
 /**
  * Monta o e-mail de RSVP a partir dos templates (assunto + corpo com {nome}/{link}).
  * O corpo em texto é transformado em HTML, com um botão para o link.

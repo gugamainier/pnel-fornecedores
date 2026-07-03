@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { usuarioAtual } from "@/lib/auth";
 import { hashSenha } from "@/lib/usuario";
+import { emailConfigurado, enviarEmail, montarEmailBoasVindas } from "@/lib/email";
 
 async function exigeAdmin() {
   const u = await usuarioAtual();
@@ -42,5 +43,29 @@ export async function POST(req: Request) {
     data: { email, nome, senhaHash: hashSenha(senha), papel },
     select: { id: true, email: true, nome: true, papel: true, criadoEm: true },
   });
-  return NextResponse.json(u);
+
+  // e-mail de boas-vindas (opcional, se o envio estiver configurado)
+  let emailEnviado = false;
+  let emailErro: string | null = null;
+  if (body?.enviarEmail) {
+    if (!emailConfigurado()) {
+      emailErro = "envio de e-mail não configurado";
+    } else {
+      try {
+        const proto = req.headers.get("x-forwarded-proto") ?? "https";
+        const host = req.headers.get("host");
+        const { assunto, texto, html } = montarEmailBoasVindas({
+          nome,
+          email,
+          senhaInicial: senha,
+          linkLogin: `${proto}://${host}/login`,
+        });
+        await enviarEmail({ para: email, assunto, texto, html });
+        emailEnviado = true;
+      } catch (e) {
+        emailErro = (e as Error).message;
+      }
+    }
+  }
+  return NextResponse.json({ ...u, emailEnviado, emailErro });
 }
