@@ -238,6 +238,7 @@ export default function FornecedorForm({
           >
             <option value="">Selecione…</option>
             <option value="MEI">MEI</option>
+            <option value="ME">ME</option>
             <option value="Simples">Simples Nacional</option>
             <option value="Lucro Presumido">Lucro Presumido</option>
             <option value="Lucro Real">Lucro Real</option>
