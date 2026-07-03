@@ -3,12 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { usuarioAtual } from "@/lib/auth";
 import { emailConfigurado, enviarEmail, montarEmailRsvp } from "@/lib/email";
 import { getConfig } from "@/lib/config";
-
-function baseUrl(req: Request): string {
-  const proto = req.headers.get("x-forwarded-proto") ?? "https";
-  const host = req.headers.get("host");
-  return `${proto}://${host}`;
-}
+import { baseUrl } from "@/lib/urls";
 
 // GET: estatísticas para a tela de disparo por e-mail
 export async function GET() {

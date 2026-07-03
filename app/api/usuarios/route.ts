@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { usuarioAtual } from "@/lib/auth";
 import { hashSenha } from "@/lib/usuario";
 import { emailConfigurado, enviarEmail, montarEmailBoasVindas } from "@/lib/email";
+import { baseUrl } from "@/lib/urls";
 
 async function exigeAdmin() {
   const u = await usuarioAtual();
@@ -52,13 +53,11 @@ export async function POST(req: Request) {
       emailErro = "envio de e-mail não configurado";
     } else {
       try {
-        const proto = req.headers.get("x-forwarded-proto") ?? "https";
-        const host = req.headers.get("host");
         const { assunto, texto, html } = montarEmailBoasVindas({
           nome,
           email,
           senhaInicial: senha,
-          linkLogin: `${proto}://${host}/login`,
+          linkLogin: `${baseUrl(req)}/login`,
         });
         await enviarEmail({ para: email, assunto, texto, html });
         emailEnviado = true;
