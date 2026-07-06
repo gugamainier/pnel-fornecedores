@@ -231,6 +231,12 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                       COTAR
                     </a>
                   )}
+                  <a
+                    href={`/fornecedor/${f.id}`}
+                    className="rounded-lg border border-brand-200 px-2.5 py-1.5 text-xs font-medium text-brand-700 transition hover:bg-brand-50"
+                  >
+                    Visualizar
+                  </a>
                   {f.status === "pendente" && <CopyRsvpButton token={f.token} />}
                   <AvaliarButton
                     fornecedorId={f.id}
