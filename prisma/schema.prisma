@@ -82,6 +82,8 @@ model Fornecedor {
   status             String    @default("pendente")
   rsvpEnviadoEm      DateTime?
   rsvpEmailEnviadoEm DateTime?
+  emailErroEm        DateTime? // e-mail não entregue (bounce/bloqueio via webhook Brevo)
+  emailErroMotivo    String?
   notaMedia          Float?
   numAvaliacoes      Int       @default(0)
   avaliacoes         Avaliacao[]

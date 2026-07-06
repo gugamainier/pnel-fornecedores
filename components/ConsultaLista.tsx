@@ -25,7 +25,23 @@ type Fornecedor = {
   regioes: string | null;
   notaMedia: number | null;
   numAvaliacoes: number;
+  rsvpEnviadoEm: string | null;
+  rsvpEmailEnviadoEm: string | null;
+  emailErroEm: string | null;
+  emailErroMotivo: string | null;
 };
+
+/** Estado derivado do funil de RSVP para exibição/filtro. */
+function estadoRsvp(f: Fornecedor): "aguardando" | "email_erro" | null {
+  if (f.status !== "pendente") return null;
+  if (f.emailErroEm) return "email_erro";
+  if (f.rsvpEnviadoEm || f.rsvpEmailEnviadoEm) return "aguardando";
+  return null;
+}
+
+function dataBr(iso: string | null): string {
+  return iso ? new Date(iso).toLocaleDateString("pt-BR") : "";
+}
 
 const LIMITE = 300;
 
@@ -78,7 +94,9 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
     const filtrada = todos.filter((f) => {
       if (cat && (cat === "(sem)" ? f.categoria : f.categoria !== cat)) return false;
       if (uf && f.uf !== uf) return false;
-      if (status && f.status !== status) return false;
+      if (status === "aguardando" || status === "email_erro") {
+        if (estadoRsvp(f) !== status) return false;
+      } else if (status && f.status !== status) return false;
       if (!termos.length) return true;
       const alvo = semAcento(
         [f.nome, f.servicos, f.contato, f.cidade, f.categoria, f.observacoes, f.regioes]
@@ -155,6 +173,8 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
           <option value="">Todos os status</option>
           <option value="confirmado">Confirmados</option>
           <option value="pendente">Pendentes</option>
+          <option value="aguardando">Enviados sem resposta</option>
+          <option value="email_erro">E-mail não entregue</option>
           <option value="recusado">Não prestam serviços</option>
           <option value="incorreto">Contato incorreto</option>
         </select>
@@ -195,9 +215,27 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                       </div>
                     )}
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.cls}`}>
-                    {badge.label}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.cls}`}>
+                      {badge.label}
+                    </span>
+                    {estadoRsvp(f) === "aguardando" && (
+                      <span
+                        className="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-700"
+                        title={`WhatsApp: ${dataBr(f.rsvpEnviadoEm) || "—"} · E-mail: ${dataBr(f.rsvpEmailEnviadoEm) || "—"}`}
+                      >
+                        Enviado {dataBr(f.rsvpEmailEnviadoEm || f.rsvpEnviadoEm)} · sem resposta
+                      </span>
+                    )}
+                    {estadoRsvp(f) === "email_erro" && (
+                      <span
+                        className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700"
+                        title={f.emailErroMotivo ?? ""}
+                      >
+                        ✕ E-mail não entregue
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {f.servicos && (

@@ -167,11 +167,20 @@ export default async function VisualizarFornecedorPage({
           )}
         </section>
 
+        {f.emailErroEm && (
+          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+            ✕ E-mail não entregue em {new Date(f.emailErroEm).toLocaleDateString("pt-BR")}
+            {f.emailErroMotivo ? ` — ${f.emailErroMotivo}` : ""}. Vale confirmar o
+            endereço com o fornecedor ou usar o WhatsApp.
+          </p>
+        )}
         <p className="text-xs text-slate-400">
           Cadastrado em {new Date(f.criadoEm).toLocaleDateString("pt-BR")} · Última
           atualização {new Date(f.atualizadoEm).toLocaleDateString("pt-BR")}
           {f.rsvpEnviadoEm &&
-            ` · RSVP enviado em ${new Date(f.rsvpEnviadoEm).toLocaleDateString("pt-BR")}`}
+            ` · RSVP WhatsApp em ${new Date(f.rsvpEnviadoEm).toLocaleDateString("pt-BR")}`}
+          {f.rsvpEmailEnviadoEm &&
+            ` · RSVP e-mail em ${new Date(f.rsvpEmailEnviadoEm).toLocaleDateString("pt-BR")}`}
         </p>
       </main>
     </>
