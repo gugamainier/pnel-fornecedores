@@ -65,3 +65,34 @@ export async function enviarWhatsappTemplate(opts: {
 export function ehCelular(digits: string | null): boolean {
   return Boolean(digits && digits.length === 11 && digits[2] === "9");
 }
+
+/**
+ * Resposta em texto livre — permitida pela Meta dentro da janela de 24h
+ * aberta quando o CONTATO manda mensagem (atendimento). Não precisa de template.
+ */
+export async function enviarWhatsappTexto(opts: {
+  paraWaId: string; // id como veio do webhook (ex.: 5511999998888)
+  texto: string;
+}): Promise<{ ok: boolean; erro?: string }> {
+  const phoneId = process.env.WHATSAPP_PHONE_ID;
+  const token = process.env.WHATSAPP_TOKEN;
+  const res = await fetch(
+    `https://graph.facebook.com/v21.0/${phoneId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: opts.paraWaId,
+        type: "text",
+        text: { body: opts.texto },
+      }),
+    }
+  );
+  if (res.ok) return { ok: true };
+  const corpo = await res.text().catch(() => "");
+  return { ok: false, erro: `${res.status}: ${corpo.slice(0, 200)}` };
+}

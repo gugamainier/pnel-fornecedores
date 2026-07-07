@@ -101,6 +101,12 @@ model Configuracao {
   valor String
 }
 
+// controla a resposta automática do WhatsApp (1 por contato a cada 24h)
+model WhatsappAutoReply {
+  fone      String   @id
+  enviadaEm DateTime @default(now())
+}
+
 model Avaliacao {
   id           Int        @id @default(autoincrement())
   fornecedorId Int
