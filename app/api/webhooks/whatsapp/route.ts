@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { enviarWhatsappTexto, whatsappConfigurado } from "@/lib/whatsapp";
+import { baseUrl } from "@/lib/urls";
 
 // Webhook da Meta (WhatsApp Cloud API).
 // Configurar no app da Meta: Webhooks → WhatsApp Business Account →
@@ -19,6 +20,12 @@ const RESPOSTA_PADRAO = `🤖 Esta é uma mensagem automática da PNEL — este 
 const RESPOSTA_OPTOUT = `✅ Pronto! Registramos que você não quer mais receber nossas mensagens. Desculpe o incômodo — se mudar de ideia, é só nos escrever em sejaumfornecedor@pnel.ag.`;
 
 const RESPOSTA_INCORRETO = `✅ Obrigado por avisar! Registramos que este contato estava incorreto e você não receberá mais nossas mensagens. Desculpe o incômodo.`;
+
+function respostaQuero(link: string | null): string {
+  return link
+    ? `Ótimo! 🙌 Aqui está o seu link para confirmar ou corrigir seus dados (leva menos de 5 minutos):\n\n${link}\n\n🤖 Mensagem automática — dúvidas: sejaumfornecedor@pnel.ag`
+    : `Ótimo! 🙌 Cadastre-se aqui (leva menos de 5 minutos):\n\n${baseUrl()}/cadastro\n\n🤖 Mensagem automática — dúvidas: sejaumfornecedor@pnel.ag`;
+}
 
 const OPTOUT_RE = /^\s*(sair|parar|pare|stop|remover|remova|descadastrar|n[aã]o quero)\b/i;
 
@@ -69,6 +76,22 @@ export async function POST(req: Request) {
           ).toUpperCase();
           if (msg.type === "button" && payloadBotao) {
             const cands = candidatosFone(de);
+
+            // "Quero responder" -> reenvia o link personalizado, sem mudar status
+            if (payloadBotao.includes("QUERO")) {
+              const f = await prisma.fornecedor.findFirst({
+                where: { telefoneDigits: { in: cands } },
+                select: { token: true },
+              });
+              if (podeResponder) {
+                await enviarWhatsappTexto({
+                  paraWaId: de,
+                  texto: respostaQuero(f ? `${baseUrl()}/confirmar/${f.token}` : null),
+                });
+              }
+              continue;
+            }
+
             const incorreto =
               payloadBotao.includes("INCORRETO") || payloadBotao.includes("ERRADO");
             await prisma.fornecedor.updateMany({

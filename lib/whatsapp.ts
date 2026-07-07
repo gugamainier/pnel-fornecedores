@@ -51,7 +51,9 @@ export async function enviarWhatsappTemplate(opts: {
                 { type: "text", text: opts.link },
               ],
             },
-            // botões de resposta rápida do template (desative com WHATSAPP_TEMPLATE_BOTOES=0)
+            // botões de resposta rápida do template, na ordem em que foram criados:
+            // 0 "Quero responder" · 1 "Não quero responder" · 2 "Contato Errado"
+            // (desative com WHATSAPP_TEMPLATE_BOTOES=0 se o template não tiver botões)
             ...(process.env.WHATSAPP_TEMPLATE_BOTOES === "0"
               ? []
               : [
@@ -59,12 +61,18 @@ export async function enviarWhatsappTemplate(opts: {
                     type: "button",
                     sub_type: "quick_reply",
                     index: "0",
-                    parameters: [{ type: "payload", payload: "RECUSAR" }],
+                    parameters: [{ type: "payload", payload: "QUERO" }],
                   },
                   {
                     type: "button",
                     sub_type: "quick_reply",
                     index: "1",
+                    parameters: [{ type: "payload", payload: "RECUSAR" }],
+                  },
+                  {
+                    type: "button",
+                    sub_type: "quick_reply",
+                    index: "2",
                     parameters: [{ type: "payload", payload: "INCORRETO" }],
                   },
                 ]),
