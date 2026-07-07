@@ -18,6 +18,8 @@ const RESPOSTA_PADRAO = `🤖 Esta é uma mensagem automática da PNEL — este 
 
 const RESPOSTA_OPTOUT = `✅ Pronto! Registramos que você não quer mais receber nossas mensagens. Desculpe o incômodo — se mudar de ideia, é só nos escrever em sejaumfornecedor@pnel.ag.`;
 
+const RESPOSTA_INCORRETO = `✅ Obrigado por avisar! Registramos que este contato estava incorreto e você não receberá mais nossas mensagens. Desculpe o incômodo.`;
+
 const OPTOUT_RE = /^\s*(sair|parar|pare|stop|remover|remova|descadastrar|n[aã]o quero)\b/i;
 
 /** Meta manda o wa_id com 55; nossos telefoneDigits não têm o 55 e podem ter o 9 extra. */
@@ -60,6 +62,27 @@ export async function POST(req: Request) {
           const de = String(msg.from ?? "");
           if (!de) continue;
           const texto = String(msg.text?.body ?? "").trim();
+
+          // 0) clique nos botões do template (chega como type "button")
+          const payloadBotao = String(
+            msg.button?.payload ?? msg.button?.text ?? ""
+          ).toUpperCase();
+          if (msg.type === "button" && payloadBotao) {
+            const cands = candidatosFone(de);
+            const incorreto =
+              payloadBotao.includes("INCORRETO") || payloadBotao.includes("ERRADO");
+            await prisma.fornecedor.updateMany({
+              where: { telefoneDigits: { in: cands }, status: { in: ["pendente", "confirmado"] } },
+              data: { status: incorreto ? "incorreto" : "recusado" },
+            });
+            if (podeResponder) {
+              await enviarWhatsappTexto({
+                paraWaId: de,
+                texto: incorreto ? RESPOSTA_INCORRETO : RESPOSTA_OPTOUT,
+              });
+            }
+            continue;
+          }
 
           // 1) opt-out por palavra-chave
           if (OPTOUT_RE.test(texto)) {
