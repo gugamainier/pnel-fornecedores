@@ -151,13 +151,19 @@ export default function FornecedorForm({
           Dados cadastrais da empresa ou profissional.
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Nome (Nome Fantasia)" name="nome" required defaultValue={initial.nome} />
-          <Field label="Razão Social" name="razaoSocial" required={empresaObrigatoria} defaultValue={initial.razaoSocial} />
-          <DocumentoField
-            defaultValue={initial.cnpj}
-            required={empresaObrigatoria}
-            onBaseEncontrada={buscarNaBase ? aplicarCadastroExistente : undefined}
-          />
+          <div className="sm:col-span-2">
+            <DocumentoField
+              defaultValue={initial.cnpj}
+              required={empresaObrigatoria}
+              onBaseEncontrada={buscarNaBase ? aplicarCadastroExistente : undefined}
+            />
+            {buscarNaBase && !jaCadastrado && (
+              <p className="mt-1 text-xs text-slate-500">
+                Comece pelo CNPJ ou CPF — se você já estiver na nossa base,
+                preenchemos o restante automaticamente.
+              </p>
+            )}
+          </div>
           {jaCadastrado && (
             <div className="sm:col-span-2 rounded-lg bg-fxgreen-100 px-4 py-3 text-sm text-fxgreen-700">
               ✓ Encontramos seu cadastro na nossa base e preenchemos os campos
@@ -165,6 +171,8 @@ export default function FornecedorForm({
               cadastro será <b>atualizado</b>, sem duplicar.
             </div>
           )}
+          <Field label="Nome (Nome Fantasia)" name="nome" required defaultValue={initial.nome} />
+          <Field label="Razão Social" name="razaoSocial" required={empresaObrigatoria} defaultValue={initial.razaoSocial} />
           <Field label="Inscrição Municipal" name="inscricaoMunicipal" defaultValue={initial.inscricaoMunicipal} />
           <div className="sm:col-span-2">
             <Field label="Rua / Logradouro" name="endereco" required={empresaObrigatoria} defaultValue={initial.endereco} />
