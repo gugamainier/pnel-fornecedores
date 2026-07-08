@@ -16,11 +16,24 @@ export async function GET() {
   const jaEnviados = await prisma.fornecedor.count({
     where: { status: "pendente", email: { not: null }, rsvpEmailEnviadoEm: { not: null } },
   });
+  // endereços já sinalizados como ruins (bounce/inválido/spam) não entram na fila
+  const comErro = await prisma.fornecedor.count({
+    where: { status: "pendente", email: { not: null }, emailErroEm: { not: null } },
+  });
+  const aEnviar = await prisma.fornecedor.count({
+    where: {
+      status: "pendente",
+      email: { not: null },
+      rsvpEmailEnviadoEm: null,
+      emailErroEm: null,
+    },
+  });
   return NextResponse.json({
     configurado: emailConfigurado(),
     comEmail,
     jaEnviados,
-    aEnviar: comEmail - jaEnviados,
+    comErro,
+    aEnviar,
   });
 }
 
@@ -61,7 +74,12 @@ export async function POST(req: Request) {
 
   const limite = Math.min(Math.max(Number(body?.limite ?? 50), 1), 300);
   const alvos = await prisma.fornecedor.findMany({
-    where: { status: "pendente", email: { not: null }, rsvpEmailEnviadoEm: null },
+    where: {
+      status: "pendente",
+      email: { not: null },
+      rsvpEmailEnviadoEm: null,
+      emailErroEm: null, // nunca reenviar para quem já deu bounce/inválido/spam
+    },
     select: { id: true, nome: true, email: true, token: true },
     take: limite,
   });
