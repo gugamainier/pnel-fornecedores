@@ -58,6 +58,18 @@ export async function GET(req: Request) {
 // POST: mensagens recebidas -> resposta automática (1x/24h) + opt-out por SAIR
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
+  // DEBUG temporário: grava tudo que chega para diagnóstico
+  try {
+    const nMsgs =
+      body?.entry?.flatMap((e: { changes?: { value?: { messages?: unknown[] } }[] }) =>
+        e.changes?.flatMap((c) => c.value?.messages ?? []) ?? []
+      )?.length ?? 0;
+    await prisma.configuracao.upsert({
+      where: { chave: "wpp_debug" },
+      update: { valor: JSON.stringify({ ts: new Date().toISOString(), temEntry: !!body?.entry, nMsgs, config: whatsappConfigurado() }) },
+      create: { chave: "wpp_debug", valor: JSON.stringify({ ts: new Date().toISOString(), temEntry: !!body?.entry, nMsgs, config: whatsappConfigurado() }) },
+    });
+  } catch {}
   // sempre responde 200 rápido para a Meta não reenviar/derrubar o webhook
   if (!body?.entry) return NextResponse.json({ ok: true });
   const podeResponder = whatsappConfigurado();
@@ -130,7 +142,15 @@ export async function POST(req: Request) {
             update: { enviadaEm: new Date() },
             create: { fone: de },
           });
-          await enviarWhatsappTexto({ paraWaId: de, texto: RESPOSTA_PADRAO });
+          const r = await enviarWhatsappTexto({ paraWaId: de, texto: RESPOSTA_PADRAO });
+          // DEBUG temporário: guarda o resultado do envio da resposta
+          try {
+            await prisma.configuracao.upsert({
+              where: { chave: "wpp_debug_send" },
+              update: { valor: JSON.stringify({ ts: new Date().toISOString(), de, ok: r.ok, erro: r.erro ?? null }) },
+              create: { chave: "wpp_debug_send", valor: JSON.stringify({ ts: new Date().toISOString(), de, ok: r.ok, erro: r.erro ?? null }) },
+            });
+          } catch {}
         }
       }
     }
