@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIAS, UFS } from "@/lib/categorias";
-import DocumentoField from "@/components/DocumentoField";
+import DocumentoField, { type CadastroExistente } from "@/components/DocumentoField";
 
 export type FornecedorFormData = {
   nome?: string | null;
@@ -81,6 +81,7 @@ export default function FornecedorForm({
   admin = false,
   status,
   empresaObrigatoria = false,
+  buscarNaBase = false,
 }: {
   initial?: FornecedorFormData;
   endpoint: string;
@@ -90,12 +91,36 @@ export default function FornecedorForm({
   admin?: boolean;
   status?: string | null;
   empresaObrigatoria?: boolean;
+  /** cadastro público: consulta a base pelo CNPJ e pré-preenche/atualiza em vez de duplicar */
+  buscarNaBase?: boolean;
 }) {
   const router = useRouter();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [regime, setRegime] = useState(initial.regimeTributario ?? "");
   const [informarCpf, setInformarCpf] = useState(Boolean(initial.cpfPagamento));
+  const [jaCadastrado, setJaCadastrado] = useState(false);
+  const [temDadosBancarios, setTemDadosBancarios] = useState(false);
+
+  // pré-preenche os campos vazios com o que já temos na base (não sobrescreve
+  // o que a pessoa já digitou); dados bancários nunca vêm da consulta pública
+  function aplicarCadastroExistente(r: CadastroExistente) {
+    for (const [campo, valor] of Object.entries(r.dados)) {
+      if (!valor) continue;
+      if (campo === "regimeTributario") {
+        setRegime((atual) => atual || valor);
+        continue;
+      }
+      const el = document.getElementById(campo) as
+        | HTMLInputElement
+        | HTMLSelectElement
+        | HTMLTextAreaElement
+        | null;
+      if (el && !el.value) el.value = valor;
+    }
+    setJaCadastrado(true);
+    setTemDadosBancarios(r.temDadosBancarios);
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -128,7 +153,18 @@ export default function FornecedorForm({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome (Nome Fantasia)" name="nome" required defaultValue={initial.nome} />
           <Field label="Razão Social" name="razaoSocial" required={empresaObrigatoria} defaultValue={initial.razaoSocial} />
-          <DocumentoField defaultValue={initial.cnpj} required={empresaObrigatoria} />
+          <DocumentoField
+            defaultValue={initial.cnpj}
+            required={empresaObrigatoria}
+            onBaseEncontrada={buscarNaBase ? aplicarCadastroExistente : undefined}
+          />
+          {jaCadastrado && (
+            <div className="sm:col-span-2 rounded-lg bg-fxgreen-100 px-4 py-3 text-sm text-fxgreen-700">
+              ✓ Encontramos seu cadastro na nossa base e preenchemos os campos
+              com o que já temos. Revise, atualize o que mudou e envie — seu
+              cadastro será <b>atualizado</b>, sem duplicar.
+            </div>
+          )}
           <Field label="Inscrição Municipal" name="inscricaoMunicipal" defaultValue={initial.inscricaoMunicipal} />
           <div className="sm:col-span-2">
             <Field label="Rua / Logradouro" name="endereco" required={empresaObrigatoria} defaultValue={initial.endereco} />
@@ -268,6 +304,13 @@ export default function FornecedorForm({
           </p>
         ) : null}
 
+        {temDadosBancarios && (
+          <p className="mb-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Já temos seus dados bancários cadastrados. Por segurança eles não
+            são exibidos aqui — preencha os campos abaixo <b>apenas se quiser
+            alterá-los</b>; em branco, mantemos os atuais.
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Banco" name="banco" defaultValue={initial.banco} />
           <Field label="Agência" name="agencia" defaultValue={initial.agencia} />

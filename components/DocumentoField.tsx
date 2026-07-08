@@ -35,18 +35,37 @@ function setCampo(id: string, valor: string | null) {
   if (el) el.value = valor;
 }
 
+export type CadastroExistente = {
+  temDadosBancarios: boolean;
+  dados: Record<string, string | null>;
+};
+
 export default function DocumentoField({
   defaultValue,
   required,
+  onBaseEncontrada,
 }: {
   defaultValue?: string | null;
   required?: boolean;
+  /** se definido, consulta a base da PNEL e avisa quando o documento já tem cadastro */
+  onBaseEncontrada?: (r: CadastroExistente) => void;
 }) {
   const [valor, setValor] = useState(defaultValue ?? "");
   const [consultando, setConsultando] = useState(false);
   const [status, setStatus] = useState<
     null | { tipo: "ok" | "erro" | "aviso"; texto: string; dados?: Receita }
   >(null);
+
+  async function buscarNaBase(doc: string) {
+    if (!onBaseEncontrada) return;
+    try {
+      const r = await fetch(`/api/cadastro/existente/${soDigitos(doc)}`);
+      const d = await r.json();
+      if (r.ok && d.existe) onBaseEncontrada(d as CadastroExistente);
+    } catch {
+      /* consulta à base é melhoria — não bloqueia o cadastro */
+    }
+  }
 
   async function verificar() {
     const tipo = tipoDocumento(valor);
@@ -56,11 +75,13 @@ export default function DocumentoField({
     }
 
     if (tipo === "cpf") {
+      const ok = validaCPF(valor);
       setStatus(
-        validaCPF(valor)
+        ok
           ? { tipo: "ok", texto: "CPF válido. (Não é possível cruzar o nome com a Receita — dado protegido.)" }
           : { tipo: "erro", texto: "CPF inválido — confira os números." }
       );
+      if (ok) void buscarNaBase(valor);
       return;
     }
 
@@ -69,6 +90,7 @@ export default function DocumentoField({
       setStatus({ tipo: "erro", texto: "CNPJ inválido — confira os números." });
       return;
     }
+    void buscarNaBase(valor);
     setConsultando(true);
     try {
       const r = await fetch(`/api/cnpj/${soDigitos(valor)}`);
