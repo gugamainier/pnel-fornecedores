@@ -16,6 +16,12 @@ export async function GET() {
   const celulares = pendentes.filter((f) => ehCelular(f.telefoneDigits));
   return NextResponse.json({
     configurado: whatsappConfigurado(),
+    // diagnóstico (sem expor segredos): quais variáveis chegaram na produção
+    env: {
+      WHATSAPP_TOKEN: Boolean(process.env.WHATSAPP_TOKEN),
+      WHATSAPP_PHONE_ID: process.env.WHATSAPP_PHONE_ID ?? null,
+      WHATSAPP_TEMPLATE: process.env.WHATSAPP_TEMPLATE ?? null,
+    },
     pendentesComCelular: celulares.length,
     jaEnviados: celulares.filter((f) => f.rsvpEnviadoEm).length,
     aEnviar: celulares.filter((f) => !f.rsvpEnviadoEm).length,
