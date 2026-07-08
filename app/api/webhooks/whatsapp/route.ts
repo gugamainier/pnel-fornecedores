@@ -58,16 +58,12 @@ export async function GET(req: Request) {
 // POST: mensagens recebidas -> resposta automática (1x/24h) + opt-out por SAIR
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
-  // DEBUG temporário: grava tudo que chega para diagnóstico
+  // DEBUG temporário: grava o corpo bruto (truncado) para diagnóstico
   try {
-    const nMsgs =
-      body?.entry?.flatMap((e: { changes?: { value?: { messages?: unknown[] } }[] }) =>
-        e.changes?.flatMap((c) => c.value?.messages ?? []) ?? []
-      )?.length ?? 0;
     await prisma.configuracao.upsert({
       where: { chave: "wpp_debug" },
-      update: { valor: JSON.stringify({ ts: new Date().toISOString(), temEntry: !!body?.entry, nMsgs, config: whatsappConfigurado() }) },
-      create: { chave: "wpp_debug", valor: JSON.stringify({ ts: new Date().toISOString(), temEntry: !!body?.entry, nMsgs, config: whatsappConfigurado() }) },
+      update: { valor: JSON.stringify({ ts: new Date().toISOString(), body }).slice(0, 3000) },
+      create: { chave: "wpp_debug", valor: JSON.stringify({ ts: new Date().toISOString(), body }).slice(0, 3000) },
     });
   } catch {}
   // sempre responde 200 rápido para a Meta não reenviar/derrubar o webhook
