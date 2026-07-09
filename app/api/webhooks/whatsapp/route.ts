@@ -58,14 +58,6 @@ export async function GET(req: Request) {
 // POST: mensagens recebidas -> resposta automática (1x/24h) + opt-out por SAIR
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
-  // DEBUG temporário: grava o corpo bruto (truncado) para diagnóstico
-  try {
-    await prisma.configuracao.upsert({
-      where: { chave: "wpp_debug" },
-      update: { valor: JSON.stringify({ ts: new Date().toISOString(), body }).slice(0, 3000) },
-      create: { chave: "wpp_debug", valor: JSON.stringify({ ts: new Date().toISOString(), body }).slice(0, 3000) },
-    });
-  } catch {}
   // sempre responde 200 rápido para a Meta não reenviar/derrubar o webhook
   if (!body?.entry) return NextResponse.json({ ok: true });
   const podeResponder = whatsappConfigurado();
@@ -138,15 +130,7 @@ export async function POST(req: Request) {
             update: { enviadaEm: new Date() },
             create: { fone: de },
           });
-          const r = await enviarWhatsappTexto({ paraWaId: de, texto: RESPOSTA_PADRAO });
-          // DEBUG temporário: guarda o resultado do envio da resposta
-          try {
-            await prisma.configuracao.upsert({
-              where: { chave: "wpp_debug_send" },
-              update: { valor: JSON.stringify({ ts: new Date().toISOString(), de, ok: r.ok, erro: r.erro ?? null }) },
-              create: { chave: "wpp_debug_send", valor: JSON.stringify({ ts: new Date().toISOString(), de, ok: r.ok, erro: r.erro ?? null }) },
-            });
-          } catch {}
+          await enviarWhatsappTexto({ paraWaId: de, texto: RESPOSTA_PADRAO });
         }
       }
     }
