@@ -47,3 +47,5 @@ prisma/full-dump.json
 prisma/seed-data.json
 prisma/import-*.json
 prisma/inbox/
+cron-worker/node_modules
+cron-worker/.wrangler
