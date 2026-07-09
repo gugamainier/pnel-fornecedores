@@ -9,9 +9,10 @@ import { baseUrl } from "@/lib/urls";
 // para nunca haver duas execuções simultâneas.
 //
 // RAMPA: cota diária = 150 no 1º dia (10/07/2026), +150 por dia, teto 1.000.
-// Cada execução envia só o que falta da cota, em bloco de até 220 (limite de
-// tempo da função). TRAVA DE QUALIDADE: verde → normal; amarelo → metade;
-// vermelho → pausa o dia.
+// A cota é DILUÍDA ao longo do dia: cada execução envia (restante ÷ execuções
+// que ainda faltam até as 17h BRT), max 220 por bloco (limite de tempo da
+// função). TRAVA DE QUALIDADE: verde → normal; amarelo → metade; vermelho →
+// pausa o dia.
 //
 // Auth: "Authorization: Bearer <CRON_SECRET>" ou ?key=. ?dry=1 só simula.
 // Resumo de cada execução em Configuracao wpp_cron_ultimo.
@@ -37,6 +38,13 @@ function cotaDoDia(): number {
   const dias = Math.floor((inicioDoDiaBrt().getTime() - RAMPA_INICIO_BRT) / 86_400_000);
   if (dias < 0) return 0; // rampa ainda não começou
   return Math.min(PASSO_DIARIO * (dias + 1), TETO_DIARIO);
+}
+
+/** execuções de cron que ainda faltam hoje (gatilhos às 9,10,...,17h BRT) */
+function execucoesRestantesHoje(): number {
+  const horaBrt = new Date(Date.now() - 3 * 3600_000).getUTCHours();
+  if (horaBrt < 9) return 9; // antes da janela: o dia todo pela frente
+  return Math.max(17 - horaBrt + 1, 1); // 9h→9, 10h→8, …, 17h→1; depois→1
 }
 
 /** qualidade atual do número na Meta: GREEN | YELLOW | RED | UNKNOWN */
@@ -80,11 +88,14 @@ export async function GET(req: Request) {
   else if (qualidade === "YELLOW") blocoTeto = Math.floor(BLOCO_MAX / 2);
 
   const restante = Math.max(cota - enviadosHoje, 0);
-  const bloco = Math.min(restante, blocoTeto);
+  const execRestantes = execucoesRestantesHoje();
+  // dilui o restante da cota pelas execuções que faltam até as 17h
+  const bloco = Math.min(Math.ceil(restante / execRestantes), blocoTeto);
 
   if (url.searchParams.get("dry")) {
     return NextResponse.json({
-      ok: true, dry: true, cota, enviadosHoje, restante, qualidade, blocoDestaExecucao: bloco,
+      ok: true, dry: true, cota, enviadosHoje, restante, execRestantes, qualidade,
+      blocoDestaExecucao: bloco,
     });
   }
 
