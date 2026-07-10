@@ -8,7 +8,8 @@ import { baseUrl } from "@/lib/urls";
 // de hora em hora 13–20h UTC/10–17h BRT (cron-worker/) — horários distintos
 // para nunca haver duas execuções simultâneas.
 //
-// RAMPA: cota diária = 150 no 1º dia (10/07/2026), +150 por dia, teto 1.000.
+// RAMPA: só DIAS ÚTEIS — cota = 150 × (nº de dias úteis desde 10/07/2026),
+// teto 1.000; sábado/domingo cota 0 (e os crons nem disparam, * * 1-5).
 // A cota é DILUÍDA ao longo do dia: cada execução envia (restante ÷ execuções
 // que ainda faltam até as 17h BRT), max 220 por bloco (limite de tempo da
 // função). TRAVA DE QUALIDADE: verde → normal; amarelo → metade; vermelho →
@@ -35,9 +36,18 @@ function inicioDoDiaBrt(): Date {
 }
 
 function cotaDoDia(): number {
-  const dias = Math.floor((inicioDoDiaBrt().getTime() - RAMPA_INICIO_BRT) / 86_400_000);
-  if (dias < 0) return 0; // rampa ainda não começou
-  return Math.min(PASSO_DIARIO * (dias + 1), TETO_DIARIO);
+  const hoje = inicioDoDiaBrt();
+  if (hoje.getTime() < RAMPA_INICIO_BRT) return 0; // rampa ainda não começou
+  // instantes de meia-noite BRT ficam às 03h UTC do mesmo dia civil,
+  // então getUTCDay() devolve o dia da semana correto em Brasília
+  const dowHoje = hoje.getUTCDay();
+  if (dowHoje === 0 || dowHoje === 6) return 0; // fim de semana: não envia
+  let uteis = 0;
+  for (let t = RAMPA_INICIO_BRT; t <= hoje.getTime(); t += 86_400_000) {
+    const dow = new Date(t).getUTCDay();
+    if (dow >= 1 && dow <= 5) uteis++;
+  }
+  return Math.min(PASSO_DIARIO * uteis, TETO_DIARIO);
 }
 
 /** execuções de cron que ainda faltam hoje (gatilhos às 9,10,...,17h BRT) */
