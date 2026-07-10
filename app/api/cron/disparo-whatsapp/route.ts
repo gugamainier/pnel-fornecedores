@@ -86,6 +86,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "WhatsApp não configurado" }, { status: 400 });
   }
 
+  // janela de envio começa às 9h BRT (gatilhos redundantes podem chamar antes)
+  const horaBrt = new Date(Date.now() - 3 * 3600_000).getUTCHours();
+  if (horaBrt < 9 && !url.searchParams.get("dry")) {
+    return NextResponse.json({ ok: true, foraDaJanela: true });
+  }
+
   const inicio = Date.now();
   const cota = cotaDoDia();
   const enviadosHoje = await prisma.fornecedor.count({

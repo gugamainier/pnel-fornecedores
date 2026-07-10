@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/disparo-whatsapp",
       "schedule": "0 12 * * 1-5"
+    },
+    {
+      "path": "/api/cron/disparo-whatsapp",
+      "schedule": "30 20 * * 1-5"
     }
   ]
 }
