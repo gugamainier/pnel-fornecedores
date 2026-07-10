@@ -5,4 +5,4 @@ compatibility_date = "2026-01-01"
 # 13–20h UTC = 10h–17h BRT, de hora em hora (o gatilho das 09h BRT é o
 # Vercel Cron em vercel.json — horários distintos, nunca simultâneos)
 [triggers]
-crons = ["0 13-20 * * *"]
+crons = ["0 13-20 * * MON-FRI"]
