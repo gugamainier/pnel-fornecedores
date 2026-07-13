@@ -65,6 +65,40 @@ export async function POST(req: Request) {
   try {
     for (const entry of body.entry ?? []) {
       for (const change of entry.changes ?? []) {
+        // status de entrega dos RSVPs (delivered/read/failed) → funil no banco
+        for (const st of change.value?.statuses ?? []) {
+          const para = String(st.recipient_id ?? "");
+          const tipo = String(st.status ?? "");
+          if (!para || !tipo) continue;
+          const cands = candidatosFone(para);
+          const agora = new Date();
+          if (tipo === "delivered" || tipo === "read") {
+            await prisma.fornecedor.updateMany({
+              where: { telefoneDigits: { in: cands }, wppEntregueEm: null },
+              data: { wppEntregueEm: agora },
+            });
+            if (tipo === "read") {
+              await prisma.fornecedor.updateMany({
+                where: { telefoneDigits: { in: cands }, wppLidoEm: null },
+                data: { wppLidoEm: agora },
+              });
+            }
+          } else if (tipo === "failed") {
+            // marca só falhas do destinatário (número sem WhatsApp / bloqueou);
+            // erros do nosso lado (limite, conta, template) não poluem o cadastro
+            const erro = st.errors?.[0];
+            const codigo = Number(erro?.code ?? 0);
+            if (codigo === 131026) {
+              await prisma.fornecedor.updateMany({
+                where: { telefoneDigits: { in: cands }, wppErroEm: null },
+                data: {
+                  wppErroEm: agora,
+                  wppErroMotivo: "não entregue: número sem WhatsApp ou bloqueou o remetente (131026)",
+                },
+              });
+            }
+          }
+        }
         for (const msg of change.value?.messages ?? []) {
           const de = String(msg.from ?? "");
           if (!de) continue;

@@ -84,6 +84,10 @@ model Fornecedor {
   rsvpEmailEnviadoEm DateTime?
   emailErroEm        DateTime? // e-mail não entregue (bounce/bloqueio via webhook Brevo)
   emailErroMotivo    String?
+  wppEntregueEm      DateTime? // RSVP de WhatsApp entregue (status "delivered" do webhook)
+  wppLidoEm          DateTime? // RSVP de WhatsApp lido (status "read")
+  wppErroEm          DateTime? // WhatsApp não entregue (número sem WhatsApp ou nos bloqueou)
+  wppErroMotivo      String?
   notaMedia          Float?
   numAvaliacoes      Int       @default(0)
   avaliacoes         Avaliacao[]

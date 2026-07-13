@@ -149,7 +149,12 @@ export async function GET(req: Request) {
   let interrompido = false;
 
   if (bloco > 0) {
-    const fila = { status: "pendente", telefoneDigits: { not: null }, rsvpEnviadoEm: null };
+    const fila = {
+      status: "pendente",
+      telefoneDigits: { not: null },
+      rsvpEnviadoEm: null,
+      wppErroEm: null, // nunca reenviar a número sem WhatsApp / que bloqueou
+    };
     // PRIORIDADE A: categoria real — fornecedor identificado, mensagem com
     // contexto, muito menos propenso a bloquear. Só esgotada a fila A entram
     // os sem categoria / produtores PDE (raspagens em massa).
