@@ -8,12 +8,16 @@ import { baseUrl } from "@/lib/urls";
 // de hora em hora 13–20h UTC/10–17h BRT (cron-worker/) — horários distintos
 // para nunca haver duas execuções simultâneas.
 //
-// RAMPA: só DIAS ÚTEIS — cota = 150 × (nº de dias úteis desde 10/07/2026),
-// teto 1.000; sábado/domingo cota 0 (e os crons nem disparam, * * 1-5).
-// A cota é DILUÍDA ao longo do dia: cada execução envia (restante ÷ execuções
-// que ainda faltam até as 17h BRT), max 220 por bloco (limite de tempo da
-// função). TRAVA DE QUALIDADE: verde → normal; amarelo → metade; vermelho →
-// pausa o dia.
+// RETOMADA CONSERVADORA (após o RED de 13/07/26): enquanto a qualidade
+// estiver VERMELHA, nada sai e o marco de retomada é zerado. Quando voltar
+// a verde/amarelo, a data é gravada em Configuracao wpp_retomada_inicio e
+// a cota recomeça em 100/dia útil, subindo +100 por SEMANA útil (5 dias),
+// teto 500 (ajustar TETO_DIARIO quando a base estiver mais quente).
+// PRIORIZAÇÃO: primeiro fornecedores com categoria real (não "Sem categoria",
+// não produtores PDE) — conhecem o próprio ofício e a mensagem faz sentido;
+// os sem categoria (raspagens em massa, maior risco de bloqueio) só depois.
+// Cota DILUÍDA 9h–17h (restante ÷ execuções que faltam), máx 220 por bloco.
+// TRAVA DE QUALIDADE por execução: verde normal · amarelo metade · vermelho 0.
 //
 // Auth: "Authorization: Bearer <CRON_SECRET>" ou ?key=. ?dry=1 só simula.
 // Resumo de cada execução em Configuracao wpp_cron_ultimo.
@@ -21,12 +25,12 @@ import { baseUrl } from "@/lib/urls";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const RAMPA_INICIO_BRT = Date.UTC(2026, 6, 10, 3, 0, 0); // 10/07/2026 00h BRT
-const PASSO_DIARIO = 150;
-const TETO_DIARIO = 1000;
+const PASSO_SEMANAL = 100; // começa em 100/dia; +100 a cada 5 dias úteis
+const TETO_DIARIO = 500;
 const BLOCO_MAX = 220;
 const INTERVALO_MS = 600;
 const ORCAMENTO_MS = 260_000;
+const CHAVE_RETOMADA = "wpp_retomada_inicio";
 
 /** início do dia corrente no fuso de Brasília (UTC-3, sem horário de verão) */
 function inicioDoDiaBrt(): Date {
@@ -35,19 +39,44 @@ function inicioDoDiaBrt(): Date {
   return new Date(brt.getTime() + 3 * 3600_000);
 }
 
-function cotaDoDia(): number {
+/**
+ * Cota do dia na retomada conservadora. Qualidade RED zera o marco (a
+ * próxima recuperação recomeça em 100/dia). Fora do RED, o primeiro dia
+ * útil grava o marco e a cota cresce +100 a cada 5 dias úteis.
+ */
+async function cotaDoDia(qualidade: string): Promise<number> {
   const hoje = inicioDoDiaBrt();
-  if (hoje.getTime() < RAMPA_INICIO_BRT) return 0; // rampa ainda não começou
   // instantes de meia-noite BRT ficam às 03h UTC do mesmo dia civil,
   // então getUTCDay() devolve o dia da semana correto em Brasília
   const dowHoje = hoje.getUTCDay();
   if (dowHoje === 0 || dowHoje === 6) return 0; // fim de semana: não envia
+
+  if (qualidade === "RED") {
+    await prisma.configuracao
+      .delete({ where: { chave: CHAVE_RETOMADA } })
+      .catch(() => {});
+    return 0;
+  }
+
+  const marco = await prisma.configuracao.findUnique({
+    where: { chave: CHAVE_RETOMADA },
+  });
+  let inicioRetomada = hoje.getTime();
+  if (!marco) {
+    await prisma.configuracao.create({
+      data: { chave: CHAVE_RETOMADA, valor: hoje.toISOString() },
+    });
+  } else {
+    inicioRetomada = new Date(marco.valor).getTime();
+  }
+
   let uteis = 0;
-  for (let t = RAMPA_INICIO_BRT; t <= hoje.getTime(); t += 86_400_000) {
+  for (let t = inicioRetomada; t <= hoje.getTime(); t += 86_400_000) {
     const dow = new Date(t).getUTCDay();
     if (dow >= 1 && dow <= 5) uteis++;
   }
-  return Math.min(PASSO_DIARIO * uteis, TETO_DIARIO);
+  const semana = Math.floor(Math.max(uteis - 1, 0) / 5); // 0 na 1ª semana útil
+  return Math.min(PASSO_SEMANAL * (semana + 1), TETO_DIARIO);
 }
 
 /** execuções de cron que ainda faltam hoje (gatilhos às 9,10,...,17h BRT) */
@@ -93,12 +122,12 @@ export async function GET(req: Request) {
   }
 
   const inicio = Date.now();
-  const cota = cotaDoDia();
+  const qualidade = await qualidadeNumero();
+  const cota = await cotaDoDia(qualidade);
   const enviadosHoje = await prisma.fornecedor.count({
     where: { rsvpEnviadoEm: { gte: inicioDoDiaBrt() } },
   });
 
-  const qualidade = await qualidadeNumero();
   let blocoTeto = BLOCO_MAX;
   if (qualidade === "RED") blocoTeto = 0; // pausa o dia
   else if (qualidade === "YELLOW") blocoTeto = Math.floor(BLOCO_MAX / 2);
@@ -120,15 +149,32 @@ export async function GET(req: Request) {
   let interrompido = false;
 
   if (bloco > 0) {
-    const alvos = (
-      await prisma.fornecedor.findMany({
-        where: { status: "pendente", telefoneDigits: { not: null }, rsvpEnviadoEm: null },
+    const fila = { status: "pendente", telefoneDigits: { not: null }, rsvpEnviadoEm: null };
+    // PRIORIDADE A: categoria real — fornecedor identificado, mensagem com
+    // contexto, muito menos propenso a bloquear. Só esgotada a fila A entram
+    // os sem categoria / produtores PDE (raspagens em massa).
+    const prioA = await prisma.fornecedor.findMany({
+      where: {
+        ...fila,
+        categoria: { not: null },
+        NOT: [
+          { categoria: "Sem categoria" },
+          { categoria: { contains: "Produtor", mode: "insensitive" } },
+        ],
+      },
+      select: { id: true, nome: true, telefoneDigits: true, token: true },
+      take: bloco * 3, // margem para filtrar os não-celulares
+    });
+    let candidatos = prioA.filter((f) => ehCelular(f.telefoneDigits));
+    if (candidatos.length < bloco) {
+      const resto = await prisma.fornecedor.findMany({
+        where: { ...fila, id: { notIn: candidatos.map((f) => f.id) } },
         select: { id: true, nome: true, telefoneDigits: true, token: true },
-        take: bloco * 3, // margem para filtrar os não-celulares
-      })
-    )
-      .filter((f) => ehCelular(f.telefoneDigits))
-      .slice(0, bloco);
+        take: bloco * 3,
+      });
+      candidatos = candidatos.concat(resto.filter((f) => ehCelular(f.telefoneDigits)));
+    }
+    const alvos = candidatos.slice(0, bloco);
 
     const base = baseUrl(req);
     for (const f of alvos) {
