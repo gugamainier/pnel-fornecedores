@@ -27,6 +27,10 @@ export const maxDuration = 300;
 
 const PASSO_SEMANAL = 100; // começa em 100/dia; +100 a cada 5 dias úteis
 const TETO_DIARIO = 500;
+// MODO SONDA (qualidade RED): sem volume novo a Meta não reavalia a nota, e o
+// vermelho congela para sempre. A sonda envia um mínimo diário bem segmentado
+// (SÓ Fila A) para gerar sinais positivos e destravar a reavaliação.
+const SONDA_DIARIA = 25;
 const BLOCO_MAX = 220;
 const INTERVALO_MS = 600;
 const ORCAMENTO_MS = 260_000;
@@ -52,10 +56,11 @@ async function cotaDoDia(qualidade: string): Promise<number> {
   if (dowHoje === 0 || dowHoje === 6) return 0; // fim de semana: não envia
 
   if (qualidade === "RED") {
+    // zera o marco (a recuperação recomeça em 100/dia) e envia só a sonda
     await prisma.configuracao
       .delete({ where: { chave: CHAVE_RETOMADA } })
       .catch(() => {});
-    return 0;
+    return SONDA_DIARIA;
   }
 
   const marco = await prisma.configuracao.findUnique({
@@ -129,7 +134,7 @@ export async function GET(req: Request) {
   });
 
   let blocoTeto = BLOCO_MAX;
-  if (qualidade === "RED") blocoTeto = 0; // pausa o dia
+  if (qualidade === "RED") blocoTeto = SONDA_DIARIA; // modo sonda
   else if (qualidade === "YELLOW") blocoTeto = Math.floor(BLOCO_MAX / 2);
 
   const restante = Math.max(cota - enviadosHoje, 0);
@@ -140,6 +145,7 @@ export async function GET(req: Request) {
   if (url.searchParams.get("dry")) {
     return NextResponse.json({
       ok: true, dry: true, cota, enviadosHoje, restante, execRestantes, qualidade,
+      modo: qualidade === "RED" ? "sonda" : "normal",
       blocoDestaExecucao: bloco,
     });
   }
@@ -171,7 +177,8 @@ export async function GET(req: Request) {
       take: bloco * 3, // margem para filtrar os não-celulares
     });
     let candidatos = prioA.filter((f) => ehCelular(f.telefoneDigits));
-    if (candidatos.length < bloco) {
+    // em modo sonda (RED) só a Fila A entra — nunca completar com raspagens
+    if (candidatos.length < bloco && qualidade !== "RED") {
       const resto = await prisma.fornecedor.findMany({
         where: { ...fila, id: { notIn: candidatos.map((f) => f.id) } },
         select: { id: true, nome: true, telefoneDigits: true, token: true },
