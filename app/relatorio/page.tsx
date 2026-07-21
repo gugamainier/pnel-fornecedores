@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
 
 export const metadata = { title: "Relatório RSVP · PNEL" };
@@ -56,7 +56,7 @@ function Lista({
 }
 
 export default async function RelatorioPage() {
-  await requireAuth();
+  await requireAdmin();
 
   const enviados = await prisma.fornecedor.count({ where: { rsvpEnviadoEm: { not: null } } });
   const entregues = await prisma.fornecedor.count({ where: { wppEntregueEm: { not: null } } });

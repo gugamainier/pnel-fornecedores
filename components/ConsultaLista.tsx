@@ -259,11 +259,16 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                   )}
                   {f.email && (
                     <a
-                      href={`mailto:${f.email}?subject=${encodeURIComponent(
+                      // abre o compose do Outlook 365 na conta corporativa do usuário
+                      href={`https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(
+                        f.email
+                      )}&subject=${encodeURIComponent(
                         `Cotação PNEL — ${f.nome}`
                       )}&body=${encodeURIComponent(
                         `Olá${f.contato ? `, ${f.contato}` : ""}!\n\nSomos da PNEL, agência de soluções em Live Marketing. Gostaríamos de solicitar uma cotação:\n\n• Evento/projeto: \n• Data e local: \n• Escopo: \n• Prazo para retorno: \n\nObrigado!`
                       )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="rounded-lg bg-fxpurple-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-fxpurple-700"
                     >
                       COTAR
