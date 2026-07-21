@@ -269,6 +269,14 @@ export default function ConsultaLista({ isAdmin }: { isAdmin: boolean }) {
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() =>
+                        // registro de uso (fire-and-forget; não bloqueia o Outlook)
+                        void fetch("/api/atividade", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ tipo: "cotacao", fornecedorId: f.id }),
+                        }).catch(() => {})
+                      }
                       className="rounded-lg bg-fxpurple-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-fxpurple-700"
                     >
                       COTAR

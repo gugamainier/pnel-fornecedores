@@ -16,6 +16,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "e-mail ou senha incorretos" }, { status: 401 });
   }
 
+  await prisma.usuario.update({
+    where: { id: usuario.id },
+    data: { ultimoLoginEm: new Date() },
+  });
+
   const res = NextResponse.json({ ok: true });
   res.cookies.set(AUTH_COOKIE, criarSessao(usuario.id), {
     httpOnly: true,

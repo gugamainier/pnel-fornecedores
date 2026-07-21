@@ -13,6 +13,7 @@ const links = [
   { href: "/disparo-email", label: "Disparo E-mail", adminOnly: true },
   { href: "/cadastro", label: "Formulário público" },
   { href: "/admin/usuarios", label: "Usuários", adminOnly: true },
+  { href: "/admin/uso", label: "Uso da equipe", adminOnly: true },
   { href: "/conta", label: "Minha conta" },
 ];
 

@@ -10,12 +10,25 @@ datasource db {
 // Índices para busca/filtro rápidos com ~15k linhas em produção.
 
 model Usuario {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  nome      String
-  senhaHash String
-  papel     String   @default("produtor") // admin | produtor
-  criadoEm  DateTime @default(now())
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  nome          String
+  senhaHash     String
+  papel         String    @default("produtor") // admin | produtor
+  criadoEm      DateTime  @default(now())
+  ultimoLoginEm DateTime?
+}
+
+// eventos de uso do sistema (ex.: clique em COTAR) para a tela Uso da equipe
+model Atividade {
+  id           Int      @id @default(autoincrement())
+  usuarioId    Int
+  tipo         String // cotacao | ...
+  fornecedorId Int?
+  criadoEm     DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([tipo])
 }
 
 model Local {
