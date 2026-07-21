@@ -120,9 +120,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "WhatsApp não configurado" }, { status: 400 });
   }
 
-  // janela de envio começa às 9h BRT (gatilhos redundantes podem chamar antes)
+  // janela de envio: 9h–18h BRT (gatilhos redundantes chamam fora dela)
   const horaBrt = new Date(Date.now() - 3 * 3600_000).getUTCHours();
-  if (horaBrt < 9 && !url.searchParams.get("dry")) {
+  if ((horaBrt < 9 || horaBrt >= 18) && !url.searchParams.get("dry")) {
     return NextResponse.json({ ok: true, foraDaJanela: true });
   }
 
