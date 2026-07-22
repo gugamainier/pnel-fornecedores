@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { whatsappConfigurado, enviarWhatsappTemplate, ehCelular } from "@/lib/whatsapp";
+import { whatsappConfigurado, enviarWhatsappTemplate } from "@/lib/whatsapp";
 import { baseUrl } from "@/lib/urls";
 
 // Disparo diário automático de WhatsApp, em blocos ao longo do dia.
@@ -155,38 +156,44 @@ export async function GET(req: Request) {
   let interrompido = false;
 
   if (bloco > 0) {
-    const fila = {
-      status: "pendente",
-      telefoneDigits: { not: null },
-      rsvpEnviadoEm: null,
-      wppErroEm: null, // nunca reenviar a número sem WhatsApp / que bloqueou
-    };
-    // PRIORIDADE A: categoria real — fornecedor identificado, mensagem com
-    // contexto, muito menos propenso a bloquear. Só esgotada a fila A entram
-    // os sem categoria / produtores PDE (raspagens em massa).
-    const prioA = await prisma.fornecedor.findMany({
-      where: {
-        ...fila,
-        categoria: { not: null },
-        NOT: [
-          { categoria: "Sem categoria" },
-          { categoria: { contains: "Produtor", mode: "insensitive" } },
-        ],
-      },
-      select: { id: true, nome: true, telefoneDigits: true, token: true },
-      take: bloco * 3, // margem para filtrar os não-celulares
-    });
-    let candidatos = prioA.filter((f) => ehCelular(f.telefoneDigits));
-    // em modo sonda (RED) só a Fila A entra — nunca completar com raspagens
-    if (candidatos.length < bloco && qualidade !== "RED") {
-      const resto = await prisma.fornecedor.findMany({
-        where: { ...fila, id: { notIn: candidatos.map((f) => f.id) } },
-        select: { id: true, nome: true, telefoneDigits: true, token: true },
-        take: bloco * 3,
-      });
-      candidatos = candidatos.concat(resto.filter((f) => ehCelular(f.telefoneDigits)));
+    // Seleção dos alvos direto no SQL:
+    // - só CELULAR (11 dígitos, 9 após o DDD) — o filtro em JS sobre um "take"
+    //   sem ordenação quebrou quando o topo da fila acumulou telefones fixos
+    // - 1 registro por telefone (DISTINCT ON) e nunca um telefone já contatado
+    //   em outro cadastro (dedup entre registros duplicados na base)
+    // - PRIORIDADE A: categoria real; raspagens sem categoria/produtores só
+    //   quando a Fila A esgotar (e nunca em modo sonda/RED)
+    const filaSql = Prisma.sql`
+      status = 'pendente' AND "rsvpEnviadoEm" IS NULL AND "wppErroEm" IS NULL
+      AND "telefoneDigits" IS NOT NULL
+      AND length("telefoneDigits") = 11 AND substr("telefoneDigits", 3, 1) = '9'
+      AND "telefoneDigits" NOT IN (
+        SELECT "telefoneDigits" FROM "Fornecedor"
+        WHERE "rsvpEnviadoEm" IS NOT NULL AND "telefoneDigits" IS NOT NULL
+      )`;
+    const prioASql = Prisma.sql`
+      AND categoria IS NOT NULL AND categoria <> 'Sem categoria'
+      AND categoria NOT ILIKE '%produtor%'`;
+    let ids = (
+      await prisma.$queryRaw<{ id: number }[]>(Prisma.sql`
+        SELECT DISTINCT ON ("telefoneDigits") id FROM "Fornecedor"
+        WHERE ${filaSql} ${prioASql}
+        ORDER BY "telefoneDigits", id
+        LIMIT ${bloco}`)
+    ).map((r) => r.id);
+    if (ids.length < bloco && qualidade !== "RED") {
+      const resto = await prisma.$queryRaw<{ id: number }[]>(Prisma.sql`
+        SELECT DISTINCT ON ("telefoneDigits") id FROM "Fornecedor"
+        WHERE ${filaSql}
+        ORDER BY "telefoneDigits", id
+        LIMIT ${bloco}`);
+      const set = new Set(ids);
+      for (const r of resto) if (!set.has(r.id) && ids.length < bloco) ids.push(r.id);
     }
-    const alvos = candidatos.slice(0, bloco);
+    const alvos = await prisma.fornecedor.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, nome: true, telefoneDigits: true, token: true },
+    });
 
     const base = baseUrl(req);
     for (const f of alvos) {
