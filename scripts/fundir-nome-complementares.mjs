@@ -34,9 +34,14 @@ const ehFreela = (f) => /freela|auton|autôn/i.test(`${f.categoria ?? ""}`);
 async function fundir(vencedor, perdedores, notaTipo) {
   const grupo = [vencedor, ...perdedores];
   const data = {};
-  // telefones: celular vira o principal; todos os distintos ficam registrados
+  // telefones: celular vira o principal; todos os distintos ficam registrados.
+  // Com mais de um celular, prioriza o que JÁ recebeu WhatsApp (mantém o
+  // rastreio dos botões/respostas), depois o do confirmado.
   const fones = [...new Set(grupo.map((f) => f.telefoneDigits).filter((d) => d && d.length >= 10))];
-  const cel = fones.find(ehCelular);
+  const cel =
+    grupo.find((f) => f.rsvpEnviadoEm && ehCelular(f.telefoneDigits))?.telefoneDigits ??
+    grupo.find((f) => f.status === "confirmado" && ehCelular(f.telefoneDigits))?.telefoneDigits ??
+    fones.find(ehCelular);
   if (fones.length > 1 || (cel && vencedor.telefoneDigits !== cel)) {
     const principal = cel ?? vencedor.telefoneDigits ?? fones[0];
     data.telefoneDigits = principal;
@@ -115,18 +120,24 @@ for (const g0 of mapa.values()) {
   if (confirmados.length > 1) { restam.push(g); continue; }
 
   const celulares = [...new Set(g.map((f) => f.telefoneDigits).filter(ehCelular))];
-  if (celulares.length > 1) { restam.push(g); continue; } // 2 celulares: conflito real
   const fixos = [...new Set(g.map((f) => f.telefoneDigits).filter((d) => d && d.length >= 10 && !ehCelular(d)))];
   const temCnpj = g.filter((f) => digits(f.cnpj).length >= 11);
   const temFone = g.filter((f) => f.telefoneDigits && f.telefoneDigits.length >= 10);
 
+  // um lado com CNPJ e outro só com contato = mesma empresa (2 celulares deixam
+  // de bloquear neste caso — é a empresa com dois números); sem esse sinal,
+  // 2 celulares distintos continuam indo para revisão manual
   const complementarCnpjFone =
     cnpjs.size === 1 && temCnpj.length >= 1 && temFone.some((f) => !temCnpj.includes(f));
   const celularMaisFixo = celulares.length === 1 && fixos.length >= 1;
-  if (!complementarCnpjFone && !celularMaisFixo) { restam.push(g); continue; }
+  if (!complementarCnpjFone) {
+    if (celulares.length > 1) { restam.push(g); continue; }
+    if (!celularMaisFixo) { restam.push(g); continue; }
+  }
 
   const vencedor =
     confirmados[0] ??
+    g.find((f) => f.rsvpEnviadoEm && ehCelular(f.telefoneDigits)) ?? // token do link já enviado segue válido
     g.find((f) => f.telefoneDigits === celulares[0]) ??
     temCnpj[0] ??
     g[0];
