@@ -140,13 +140,23 @@ export async function GET(req: Request) {
 
   const restante = Math.max(cota - enviadosHoje, 0);
   const execRestantes = execucoesRestantesHoje();
-  // dilui o restante da cota pelas execuções que faltam até as 17h
-  const bloco = Math.min(Math.ceil(restante / execRestantes), blocoTeto);
+  // TETO POR HORA: os gatilhos redundantes (cron da hora cheia + pnel-sync na
+  // meia hora) disparavam 2 blocos/hora — o dobro do ritmo planejado; em 27/07
+  // isso concentrou 43 envios às 9h e derrubou a qualidade. Agora a hora tem um
+  // teto fixo (cota ÷ 9) que vale para a SOMA dos gatilhos daquela hora.
+  const tetoHora = Math.ceil(cota / 9);
+  const inicioHoraBrt = new Date(Math.floor((Date.now() - 3 * 3600_000) / 3600_000) * 3600_000 + 3 * 3600_000);
+  const enviadosNestaHora = await prisma.fornecedor.count({
+    where: { rsvpEnviadoEm: { gte: inicioHoraBrt } },
+  });
+  const folgaDaHora = Math.max(tetoHora - enviadosNestaHora, 0);
+  const bloco = Math.min(Math.ceil(restante / execRestantes), blocoTeto, folgaDaHora);
 
   if (url.searchParams.get("dry")) {
     return NextResponse.json({
       ok: true, dry: true, cota, enviadosHoje, restante, execRestantes, qualidade,
       modo: qualidade === "RED" ? "sonda" : "normal",
+      tetoHora, enviadosNestaHora,
       blocoDestaExecucao: bloco,
     });
   }
