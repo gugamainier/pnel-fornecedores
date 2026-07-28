@@ -48,7 +48,13 @@ function inicioDoDiaBrt(): Date {
  * Cota do dia na retomada conservadora. Qualidade RED zera o marco (a
  * próxima recuperação recomeça em 100/dia). Fora do RED, o primeiro dia
  * útil grava o marco e a cota cresce +100 a cada 5 dias úteis.
+ * HISTERESE: a classificação da Meta oscila RED↔GREEN dentro do mesmo dia
+ * (28/07: execuções "verdes" furaram a sonda e saíram 63). Um dia que viu
+ * vermelho fica em modo sonda ATÉ O FIM — só um dia inteiro sem RED volta
+ * ao ritmo normal.
  */
+const CHAVE_DIA_VERMELHO = "wpp_dia_vermelho";
+
 async function cotaDoDia(qualidade: string): Promise<number> {
   const hoje = inicioDoDiaBrt();
   // instantes de meia-noite BRT ficam às 03h UTC do mesmo dia civil,
@@ -57,12 +63,24 @@ async function cotaDoDia(qualidade: string): Promise<number> {
   if (dowHoje === 0 || dowHoje === 6) return 0; // fim de semana: não envia
 
   if (qualidade === "RED") {
-    // zera o marco (a recuperação recomeça em 100/dia) e envia só a sonda
+    // zera o marco (a recuperação recomeça em 100/dia), marca o dia como
+    // vermelho e envia só a sonda
     await prisma.configuracao
       .delete({ where: { chave: CHAVE_RETOMADA } })
       .catch(() => {});
+    await prisma.configuracao.upsert({
+      where: { chave: CHAVE_DIA_VERMELHO },
+      update: { valor: hoje.toISOString() },
+      create: { chave: CHAVE_DIA_VERMELHO, valor: hoje.toISOString() },
+    });
     return SONDA_DIARIA;
   }
+
+  // dia já viu vermelho? segue em sonda até virar o dia (evita o vai-e-vem)
+  const diaVermelho = await prisma.configuracao.findUnique({
+    where: { chave: CHAVE_DIA_VERMELHO },
+  });
+  if (diaVermelho?.valor === hoje.toISOString()) return SONDA_DIARIA;
 
   const marco = await prisma.configuracao.findUnique({
     where: { chave: CHAVE_RETOMADA },
@@ -129,6 +147,11 @@ export async function GET(req: Request) {
 
   const inicio = Date.now();
   const qualidade = await qualidadeNumero();
+  // consulta indisponível ≠ verde: não envia nesta execução (a próxima tenta
+  // de novo) e não mexe em marco/cota
+  if (qualidade === "UNKNOWN" && !url.searchParams.get("dry")) {
+    return NextResponse.json({ ok: true, qualidadeIndisponivel: true });
+  }
   const cota = await cotaDoDia(qualidade);
   const enviadosHoje = await prisma.fornecedor.count({
     where: { rsvpEnviadoEm: { gte: inicioDoDiaBrt() } },
