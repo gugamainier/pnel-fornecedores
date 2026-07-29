@@ -97,6 +97,8 @@ model Fornecedor {
   rsvpEmailEnviadoEm DateTime?
   emailErroEm        DateTime? // e-mail não entregue (bounce/bloqueio via webhook Brevo)
   emailErroMotivo    String?
+  emailAbertoEm      DateTime? // primeira abertura de e-mail (webhook/API Brevo)
+  emailOnda2Em       DateTime? // 2ª onda de e-mail enviada (reengajamento de quem não abriu)
   wppEntregueEm      DateTime? // RSVP de WhatsApp entregue (status "delivered" do webhook)
   wppLidoEm          DateTime? // RSVP de WhatsApp lido (status "read")
   wppErroEm          DateTime? // WhatsApp não entregue (número sem WhatsApp ou nos bloqueou)

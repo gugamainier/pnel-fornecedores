@@ -39,7 +39,17 @@ export async function POST(req: Request) {
   for (const ev of eventos) {
     const tipo = String(ev?.event ?? "").toLowerCase();
     const email = String(ev?.email ?? "").trim().toLowerCase();
-    if (!email || !EVENTOS_ERRO.has(tipo)) continue;
+    if (!email) continue;
+    // abertura: marca a primeira vez (funil + segmentação de reengajamento)
+    if (tipo === "opened" || tipo === "unique_opened" || tipo === "proxy_open") {
+      const r = await prisma.fornecedor.updateMany({
+        where: { email: { equals: email, mode: "insensitive" }, emailAbertoEm: null },
+        data: { emailAbertoEm: new Date() },
+      });
+      marcados += r.count;
+      continue;
+    }
+    if (!EVENTOS_ERRO.has(tipo)) continue;
     const motivo = `${MOTIVOS[tipo] ?? tipo}${ev?.reason ? ` — ${String(ev.reason).slice(0, 120)}` : ""}`;
     const r = await prisma.fornecedor.updateMany({
       where: { email: { equals: email, mode: "insensitive" } },
