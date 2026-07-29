@@ -138,6 +138,13 @@ export async function GET(req: Request) {
   if (!whatsappConfigurado()) {
     return NextResponse.json({ error: "WhatsApp não configurado" }, { status: 400 });
   }
+  // INTERRUPTOR DE EMERGÊNCIA: aviso formal de spam da Meta em 29/07/2026
+  // ("se persistir, a conta poderá ser restringida ou desabilitada").
+  // Com WHATSAPP_PAUSADO=1, nenhum disparo em massa sai — o webhook/bot e as
+  // respostas de atendimento continuam funcionando normalmente.
+  if (process.env.WHATSAPP_PAUSADO === "1") {
+    return NextResponse.json({ ok: true, pausado: true });
+  }
 
   // janela de envio: 9h–18h BRT (gatilhos redundantes chamam fora dela)
   const horaBrt = new Date(Date.now() - 3 * 3600_000).getUTCHours();
