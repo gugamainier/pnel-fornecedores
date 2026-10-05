@@ -55,8 +55,43 @@ function Lista({
   );
 }
 
+/** estado vivo do canal (mesma fonte do cron, em modo dry) */
+async function estadoDoCanal(): Promise<{
+  pausado: boolean;
+  qualidade?: string;
+  cota?: number;
+  enviadosHoje?: number;
+} | null> {
+  const segredo = process.env.CRON_SECRET;
+  if (!segredo) return null;
+  try {
+    const base = process.env.APP_URL ?? "https://pnel-fornecedores.vercel.app";
+    const r = await fetch(
+      `${base}/api/cron/disparo-whatsapp?key=${segredo}&dry=1`,
+      { cache: "no-store" }
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    return {
+      pausado: Boolean(d.pausado),
+      qualidade: d.qualidade,
+      cota: d.cota,
+      enviadosHoje: d.enviadosHoje,
+    };
+  } catch {
+    return null;
+  }
+}
+
+const COR_QUALIDADE: Record<string, { rotulo: string; classe: string }> = {
+  GREEN: { rotulo: "Verde (alta)", classe: "text-fxgreen-700" },
+  YELLOW: { rotulo: "Amarela (média)", classe: "text-amber-600" },
+  RED: { rotulo: "Vermelha (baixa)", classe: "text-fxred-600" },
+};
+
 export default async function RelatorioPage() {
   await requireAdmin();
+  const canal = await estadoDoCanal();
 
   const enviados = await prisma.fornecedor.count({ where: { rsvpEnviadoEm: { not: null } } });
   const entregues = await prisma.fornecedor.count({ where: { wppEntregueEm: { not: null } } });
@@ -105,6 +140,37 @@ export default async function RelatorioPage() {
           passaram a ser registradas em 13/07/2026 — envios anteriores não têm
           esses marcadores.
         </p>
+
+        <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Canal WhatsApp (ao vivo)
+        </h2>
+        {canal ? (
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Kpi
+              label="Situação"
+              valor={canal.pausado ? "⏸ Pausado" : "▶︎ Ativo"}
+              sub={canal.pausado ? "disparo em massa desligado" : "gotejamento diário"}
+            />
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Qualidade na Meta
+              </p>
+              <p
+                className={`mt-1 text-2xl font-bold ${
+                  COR_QUALIDADE[canal.qualidade ?? ""]?.classe ?? "text-slate-400"
+                }`}
+              >
+                {COR_QUALIDADE[canal.qualidade ?? ""]?.rotulo ?? "—"}
+              </p>
+            </div>
+            <Kpi label="Cota do dia" valor={canal.cota ?? "—"} sub="mensagens/dia" />
+            <Kpi label="Enviadas hoje" valor={canal.enviadosHoje ?? "—"} />
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-400">
+            Estado do canal indisponível no momento.
+          </p>
+        )}
 
         <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-slate-500">
           Funil do WhatsApp

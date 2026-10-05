@@ -82,6 +82,11 @@ async function cotaDoDia(qualidade: string): Promise<number> {
   });
   if (diaVermelho?.valor === hoje.toISOString()) return SONDA_DIARIA;
 
+  // COTA FIXA (retomada out/2026, decisão do Gustavo): gotejamento permanente,
+  // sem rampa — se o aviso de spam da Meta voltar, desligamos em definitivo.
+  const fixa = Number(process.env.WHATSAPP_COTA_FIXA ?? 0);
+  if (fixa > 0) return Math.min(fixa, TETO_DIARIO);
+
   const marco = await prisma.configuracao.findUnique({
     where: { chave: CHAVE_RETOMADA },
   });
