@@ -1,0 +1,13 @@
+[
+ {"grupo": "laftech", "nome": "Laftech", "fica": 382, "apaga": [15598],
+  "extraFones": ["21980903516", "41998296474"],
+  "notaExtra": "mesma operação Laftech com 2 PJs (ok do Gustavo 23/07): absorvido CNPJ 15.302.750/0001-95 (N-TECH LOCAÇÕES DE EQUIPAMENTOS LTDA - ME) · e-mail alt.: laftech@laftech.com.br"},
+ {"grupo": "sniper", "nome": "Sniper Serviços", "fica": 615, "apaga": [14685],
+  "notaExtra": "CNPJ alt. (matriz 0001): 15.054.095/0001-01 — mesmo grupo, confirmado é a filial 0002"},
+ {"grupo": "ativa", "nome": "Ativa Locação", "fica": 74, "apaga": [15269],
+  "notaExtra": "filial MG absorvida: CNPJ 02.580.316/0003-97 (mesma raiz do confirmado 0009-82 SP)"},
+ {"grupo": "comlurb", "nome": "Comlurb", "fica": 172, "apaga": [16361],
+  "notaExtra": "CNPJ correto da Comlurb: 42.124.693/0001-74 (campo CNPJ do confirmado tinha CPF 082.515.367-07 — registrado aqui)"},
+ {"grupo": "apple", "nome": "Apple Produções", "fica": 385, "apaga": [17642],
+  "notaExtra": "filial 0004 absorvida: CNPJ 38.878.823/0004-30"}
+]

@@ -68,7 +68,11 @@ for (const g of grupos) {
     }
   }
   const obsExtras = perdedores.map((f) => f.observacoes).filter((o) => o && o !== vencedor.observacoes);
-  const nota = `Unificado (nome igual, dado confirmado prevalece): ${perdedores.map((f) => `${f.nome} (#${f.id})`).join(", ")} em 23/07/2026`;
+  // contatos do perdedor que não couberam no vencedor ficam registrados na nota
+  const fonesExtras = [...new Set(perdedores.map((f) => f.telefone).filter((t) => t && t !== (data.telefone ?? vencedor.telefone)))];
+  const emailsExtras = [...new Set(perdedores.map((f) => f.email).filter((e) => e && e !== (data.email ?? vencedor.email)))];
+  const alt = [fonesExtras.length ? `fone alt.: ${fonesExtras.join(" / ")}` : "", emailsExtras.length ? `e-mail alt.: ${emailsExtras.join(", ")}` : ""].filter(Boolean).join(" · ");
+  const nota = `Unificado (nome igual, dado confirmado prevalece): ${perdedores.map((f) => `${f.nome} (#${f.id})`).join(", ")}${alt ? ` · ${alt}` : ""} em 23/07/2026`;
   data.observacoes = [vencedor.observacoes, ...obsExtras, nota].filter(Boolean).join(" | ");
 
   console.log(`#${vencedor.id} ${vencedor.nome} [confirmado] ← apaga ${perdedores.map((f) => `#${f.id} (${f.telefoneDigits ?? "sem fone"})`).join(", ")}`);

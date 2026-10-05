@@ -1,0 +1,12 @@
+[
+ {"grupo": "setugroup", "nome": "SetuGroup", "fica": 1785, "apaga": [9, 14874],
+  "notaExtra": "mesma empresa (ok do Gustavo 23/07): absorvido CNPJ alt. 17.667.324/0001-80"},
+ {"grupo": "equipe5", "nome": "Equipe 5 Eventos", "fica": 240, "apaga": [14798],
+  "notaExtra": "mesma empresa (ok do Gustavo 23/07): absorvido CNPJ alt. 21.598.259/0001-56"},
+ {"grupo": "bw", "nome": "BW Serviços", "fica": 119, "apaga": [14903],
+  "notaExtra": "mesma empresa (ok do Gustavo 23/07): absorvido CNPJ alt. 12.263.230/0001-22"},
+ {"grupo": "rental", "nome": "Rental Brasil", "fica": 566, "apaga": [16073],
+  "notaExtra": "mesma empresa (ok do Gustavo 23/07): absorvido CNPJ alt. 00.628.326/0001-68"},
+ {"grupo": "eliana", "nome": "Eliana Banheiros VIP", "fica": 10011, "apaga": [11293],
+  "notaExtra": "mesmo fornecedor em 2 grupos da planilha, mesmo fone 95437-0052 (ok do Gustavo 23/07) — conferir DDD (55)"}
+]
